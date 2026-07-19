@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perhitungan Hadiah Togel</title>
+<style>
+  :root{
+    --bg-app: #2b1710;
+    --bg-panel: #4a2a1a;
+    --bg-card: #2f1710;
+    --header-orange: #c1440e;
+    --accent-orange: #e2610f;
+    --pink: #e91e63;
+    --pink-dark: #c2185b;
+    --blue: #2196d8;
+    --blue-dark: #1976a8;
+    --yellow: #f5c518;
+    --input-bg: #e9edf3;
+    --input-text: #6b7280;
+    --border-soft: rgba(255,255,255,0.15);
+    --text-light: #f3ede7;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg-app);
+    color: var(--text-light);
+  }
+  .topbar{
+    background: var(--header-orange);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    padding:14px 16px;
+  }
+  .topbar .back{
+    position:absolute; left:16px;
+    font-size:22px; cursor:pointer; user-select:none;
+    background:none;border:none;color:#fff;
+  }
+  .topbar .settings{
+    position:absolute; right:16px;
+    font-size:20px; cursor:pointer; user-select:none;
+    background:none;border:none;color:#fff;
+  }
+  .topbar h1{
+    font-size:16px;
+    letter-spacing:0.5px;
+    margin:0;
+    font-weight:700;
+  }
+  .panel{
+    max-width:960px;
+    margin: 14px auto;
+    background: var(--bg-panel);
+    border-radius:8px;
+    padding:18px 20px 26px;
+  }
+  .market-dropdown{
+    position:relative;
+    display:inline-block;
+    margin-bottom:10px;
+  }
+  .market-toggle{
+    background:none;
+    border:none;
+    color: var(--yellow);
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:2px 0;
+  }
+  .market-toggle .caret{
+    font-size:12px;
+    transition: transform .15s ease;
+    color: var(--yellow);
+  }
+  .market-toggle.open .caret{ transform: rotate(180deg); }
+  .market-list{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;
+    background: var(--bg-card);
+    border:1px solid var(--border-soft);
+    border-radius:6px;
+    min-width:220px;
+    max-height:320px;
+    overflow-y:auto;
+    z-index:20;
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+    display:none;
+  }
+  .market-list.show{ display:block; }
+  .market-item{
+    padding:10px 16px;
+    font-size:14px;
+    cursor:pointer;
+    color: var(--text-light);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .market-item:last-child{ border-bottom:none; }
+  .market-item:hover{ background: rgba(255,255,255,0.08); }
+  .market-item.active{ color: var(--yellow); font-weight:700; }
+  hr.divider{
+    border:none;
+    border-top:1px solid rgba(255,255,255,0.35);
+    margin: 8px 0 16px;
+  }
+  .tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .tab-btn{
+    background:#6b5142;
+    color:#fff;
+    border:none;
+    padding:9px 16px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:0.5px;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background: var(--accent-orange);
+  }
+  .section-pill-wrap{
+    text-align:center;
+    margin: 6px 0 16px;
+  }
+  .section-pill{
+    display:inline-block;
+    border:1.5px solid var(--accent-orange);
+    color:#fff;
+    font-size:11.5px;
+    font-weight:800;
+    padding:5px 14px;
+    border-radius:5px;
+  }
+  .group-block{ margin-bottom: 8px; }
+  .cards-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap:16px;
+  }
+  .card{
+    background: var(--bg-card);
+    border-radius:8px;
+    padding:16px 16px 18px;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .card h3{
+    font-size:13.5px;
+    font-weight:800;
+    text-align:center;
+    margin:0 0 8px;
+    letter-spacing:0.4px;
+    color:#ffffff;
+  }
+  .card .meta{
+    text-align:center;
+    font-size:11px;
+    font-weight:700;
+    color:#f0e2d6;
+    border-top:1px dashed rgba(255,255,255,0.3);
+    border-bottom:1px dashed rgba(255,255,255,0.3);
+    padding:6px 0;
+    margin-bottom:12px;
+  }
+  .card input{
+    width:100%;
+    padding:9px 10px;
+    border-radius:6px;
+    border:none;
+    background: var(--input-bg);
+    color:#1f2937;
+    font-size:13px;
+    text-align:center;
+    margin-bottom:10px;
+  }
+  .card input::placeholder{ color: var(--input-text); }
+  .btn-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .btn{
+    flex:1;
+    border:none;
+    padding:8px 0;
+    border-radius:6px;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:0.4px;
+    cursor:pointer;
+    color:#fff;
+  }
+  .btn-hitung{ background: var(--pink); }
+  .btn-hitung:hover{ background: var(--pink-dark); }
+  .btn-reset{ background: var(--blue); }
+  .btn-reset:hover{ background: var(--blue-dark); }
+  .result-box{
+    margin-top:10px;
+    border:1px dashed rgba(255,255,255,0.4);
+    border-radius:6px;
+    padding:9px 11px;
+    font-size:12.5px;
+  }
+  .result-line{
+    display:block;
+    text-align:center;
+    padding:3px 0;
+    font-weight:700;
+  }
+  .result-line .label{ color:#e7e0da; font-weight:700; }
+  .result-line.bayar .value{ color:#4fc3ff; font-weight:800; }
+  .result-line.menang .value{ color: var(--yellow); font-weight:800; }
+  .result-line.total{
+    border-top:1px dashed rgba(255,255,255,0.3);
+    margin-top:4px;
+    padding-top:6px;
+    font-size:13.5px;
+  }
+  .result-line.total .label{ color:#ffb35c; font-weight:800; }
+  .result-line.total .value{ color:#ff7a3c; font-weight:800; }
+  .error-text{
+    color:#ff8080;
+    font-size:11px;
+    text-align:center;
+    margin-top:6px;
+  }
+  @media (max-width:600px){
+    .panel{ padding:14px 12px 20px; margin:8px; }
+    .tab-btn{ padding:8px 10px; font-size:11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" aria-label="Kembali">&#10094;</button>
+  <h1>PERHITUNGAN HADIAH TOGEL</h1>
+  <button class="settings" aria-label="Pengaturan">&#9776;</button>
+</div>
+
+<div class="panel">
+  <div class="market-dropdown">
+    <button type="button" class="market-toggle" id="marketToggle">
+      <span id="marketLabel">HONGKONG LOTTO</span>
+      <span class="caret">&#9660;</span>
+    </button>
+    <div class="market-list" id="marketList"></div>
+  </div>
+  <hr class="divider">
+
+  <div class="tabs" id="tabs"></div>
+  <div class="section-pill-wrap" id="activePill" style="display:none;">
+    <span class="section-pill" id="activePillText"></span>
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<script>
+(function(){
+
+  // ---------------------------------------------------------------------
+  // DATA: rates for each betting type per market.
+  // mode "hadiah" -> menang = nominal * value
+  // mode "kei"    -> menang = nominal * (1 + value/100)   (near even-money bets)
+  // ---------------------------------------------------------------------
+  var HK_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:66.5, mode:"hadiah", value:3000 },
+        { name:"DISKON 3D", diskon:59.5, mode:"hadiah", value:400 },
+        { name:"DISKON 2D", diskon:29.5, mode:"hadiah", value:65 }
+      ]
+    },
+    betfull: {
+      label: "Bet Full",
+      items: [
+        { name:"BET FULL 4D", diskon:0, mode:"hadiah", value:10000 },
+        { name:"BET FULL 3D", diskon:0, mode:"hadiah", value:1000 },
+        { name:"BET FULL 2D", diskon:0, mode:"hadiah", value:100 }
+      ]
+    },
+    prize: {
+      label: "Prize",
+      items: [
+        { name:"PRIZE 1_1", diskon:0, mode:"hadiah", value:6500 },
+        { name:"PRIZE 1_2", diskon:0, mode:"hadiah", value:650 },
+        { name:"PRIZE 1_3", diskon:0, mode:"hadiah", value:70 },
+        { name:"PRIZE 2_1", diskon:0, mode:"hadiah", value:2100 },
+        { name:"PRIZE 2_2", diskon:0, mode:"hadiah", value:210 },
+        { name:"PRIZE 2_3", diskon:0, mode:"hadiah", value:20 },
+        { name:"PRIZE 3_1", diskon:0, mode:"hadiah", value:1100 },
+        { name:"PRIZE 3_2", diskon:0, mode:"hadiah", value:110 },
+        { name:"PRIZE 3_3", diskon:0, mode:"hadiah", value:8 }
+      ]
+    },
+    tepatbb: {
+      label: "Tepat & BB",
+      items: [
+        { name:"4D TEPAT", diskon:0, mode:"hadiah", value:4000 },
+        { name:"4D BB", diskon:0, mode:"hadiah", value:200 },
+        { name:"3D TEPAT", diskon:0, mode:"hadiah", value:400 },
+        { name:"3D BB", diskon:0, mode:"hadiah", value:100 },
+        { name:"2D TEPAT", diskon:0, mode:"hadiah", value:70 },
+        { name:"2D BB", diskon:0, mode:"hadiah", value:20 }
+      ]
+    },
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:6, mode:"hadiah", value:1.5 },
+        { name:"COLOK BEBAS 2D(2)", diskon:10, mode:"hadiah", value:7 },
+        { name:"COLOK BEBAS 2D(3)", diskon:10, mode:"hadiah", value:11 },
+        { name:"COLOK BEBAS 2D(4)", diskon:10, mode:"hadiah", value:18 },
+        { name:"COLOK BEBAS 2D(5)", diskon:10, mode:"hadiah", value:200 },
+        { name:"COLOK NAGA(3)", diskon:10, mode:"hadiah", value:23 },
+        { name:"COLOK NAGA(4)", diskon:10, mode:"hadiah", value:35 },
+        { name:"COLOK NAGA(5)", diskon:10, mode:"hadiah", value:125 },
+        { name:"COLOK JITU", diskon:6, mode:"hadiah", value:8 },
+        { name:"TENGAH TEPI", diskon:2, mode:"kei", value:-3 },
+        { name:"DASAR GENAP - KECIL", diskon:2, mode:"kei", value:10 },
+        { name:"DASAR GANJIL - BESAR", diskon:2, mode:"kei", value:-25 },
+        { name:"50 - 50", diskon:2, mode:"kei", value:-3 },
+        { name:"SHIO", diskon:5, mode:"hadiah", value:9.5 },
+        { name:"SILANG HOMO", diskon:2, mode:"kei", value:-3 },
+        { name:"KEMBANG KEMPIS KEMBAR", diskon:2, mode:"kei", value:-3 },
+        { name:"KOMBINASI", diskon:8, mode:"hadiah", value:2.6 }
+      ]
+    }
+  };
+
+  // Sydney Lotto rates confirmed identical to Hongkong Lotto's rates
+  // (Diskon 4D 66.5%/x3000, 3D 59.5%/x400, 2D 29.5%/x65, Bet Full x10000/x1000/x100,
+  // Prize 1_1..3_3, Tepat & BB, and Lainnya all match) per the reference screenshots.
+  var SYDNEY_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:66.5, mode:"hadiah", value:3000 },
+        { name:"DISKON 3D", diskon:59.5, mode:"hadiah", value:400 },
+        { name:"DISKON 2D", diskon:29.5, mode:"hadiah", value:65 }
+      ]
+    },
+    betfull: {
+      label: "Bet Full",
+      items: [
+        { name:"BET FULL 4D", diskon:0, mode:"hadiah", value:10000 },
+        { name:"BET FULL 3D", diskon:0, mode:"hadiah", value:1000 },
+        { name:"BET FULL 2D", diskon:0, mode:"hadiah", value:100 }
+      ]
+    },
+    prize: {
+      label: "Prize",
+      items: [
+        { name:"PRIZE 1_1", diskon:0, mode:"hadiah", value:6500 },
+        { name:"PRIZE 1_2", diskon:0, mode:"hadiah", value:650 },
+        { name:"PRIZE 1_3", diskon:0, mode:"hadiah", value:70 },
+        { name:"PRIZE 2_1", diskon:0, mode:"hadiah", value:2100 },
+        { name:"PRIZE 2_2", diskon:0, mode:"hadiah", value:210 },
+        { name:"PRIZE 2_3", diskon:0, mode:"hadiah", value:20 },
+        { name:"PRIZE 3_1", diskon:0, mode:"hadiah", value:1100 },
+        { name:"PRIZE 3_2", diskon:0, mode:"hadiah", value:110 },
+        { name:"PRIZE 3_3", diskon:0, mode:"hadiah", value:8 }
+      ]
+    },
+    tepatbb: {
+      label: "Tepat & BB",
+      items: [
+        { name:"4D TEPAT", diskon:0, mode:"hadiah", value:4000 },
+        { name:"4D BB", diskon:0, mode:"hadiah", value:200 },
+        { name:"3D TEPAT", diskon:0, mode:"hadiah", value:400 },
+        { name:"3D BB", diskon:0, mode:"hadiah", value:100 },
+        { name:"2D TEPAT", diskon:0, mode:"hadiah", value:70 },
+        { name:"2D BB", diskon:0, mode:"hadiah", value:20 }
+      ]
+    },
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:6, mode:"hadiah", value:1.5 },
+        { name:"COLOK BEBAS 2D(2)", diskon:10, mode:"hadiah", value:7 },
+        { name:"COLOK BEBAS 2D(3)", diskon:10, mode:"hadiah", value:11 },
+        { name:"COLOK BEBAS 2D(4)", diskon:10, mode:"hadiah", value:18 },
+        { name:"COLOK BEBAS 2D(5)", diskon:10, mode:"hadiah", value:200 },
+        { name:"COLOK NAGA(3)", diskon:10, mode:"hadiah", value:23 },
+        { name:"COLOK NAGA(4)", diskon:10, mode:"hadiah", value:35 },
+        { name:"COLOK NAGA(5)", diskon:10, mode:"hadiah", value:125 },
+        { name:"COLOK JITU", diskon:6, mode:"hadiah", value:8 },
+        { name:"TENGAH TEPI", diskon:2, mode:"kei", value:-3 },
+        { name:"DASAR GENAP - KECIL", diskon:2, mode:"kei", value:10 },
+        { name:"DASAR GANJIL - BESAR", diskon:2, mode:"kei", value:-25 },
+        { name:"50 - 50", diskon:2, mode:"kei", value:-3 },
+        { name:"SHIO", diskon:5, mode:"hadiah", value:9.5 },
+        { name:"SILANG HOMO", diskon:2, mode:"kei", value:-3 },
+        { name:"KEMBANG KEMPIS KEMBAR", diskon:2, mode:"kei", value:-3 },
+        { name:"KOMBINASI", diskon:8, mode:"hadiah", value:2.6 }
+      ]
+    }
+  };
+
+  // King Kong4D (Malam & Sore) rates per reference screenshots: no PRIZE
+  // category exists for this market; Diskon rates differ from Hongkong,
+  // while Bet Full, Tepat & BB, and Lainnya all match Hongkong's rates.
+  var KINGKONG_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:33, mode:"hadiah", value:6000 },
+        { name:"DISKON 3D", diskon:24, mode:"hadiah", value:700 },
+        { name:"DISKON 2D", diskon:15, mode:"hadiah", value:80 }
+      ]
+    },
+    betfull: {
+      label: "Bet Full",
+      items: [
+        { name:"BET FULL 4D", diskon:0, mode:"hadiah", value:10000 },
+        { name:"BET FULL 3D", diskon:0, mode:"hadiah", value:1000 },
+        { name:"BET FULL 2D", diskon:0, mode:"hadiah", value:100 }
+      ]
+    },
+    tepatbb: {
+      label: "Tepat & BB",
+      items: [
+        { name:"4D TEPAT", diskon:0, mode:"hadiah", value:4000 },
+        { name:"4D BB", diskon:0, mode:"hadiah", value:200 },
+        { name:"3D TEPAT", diskon:0, mode:"hadiah", value:400 },
+        { name:"3D BB", diskon:0, mode:"hadiah", value:100 },
+        { name:"2D TEPAT", diskon:0, mode:"hadiah", value:70 },
+        { name:"2D BB", diskon:0, mode:"hadiah", value:20 }
+      ]
+    },
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:6, mode:"hadiah", value:1.5 },
+        { name:"COLOK BEBAS 2D(2)", diskon:10, mode:"hadiah", value:7 },
+        { name:"COLOK BEBAS 2D(3)", diskon:10, mode:"hadiah", value:11 },
+        { name:"COLOK BEBAS 2D(4)", diskon:10, mode:"hadiah", value:18 },
+        { name:"COLOK BEBAS 2D(5)", diskon:10, mode:"hadiah", value:200 },
+        { name:"COLOK NAGA(3)", diskon:10, mode:"hadiah", value:23 },
+        { name:"COLOK NAGA(4)", diskon:10, mode:"hadiah", value:35 },
+        { name:"COLOK NAGA(5)", diskon:10, mode:"hadiah", value:125 },
+        { name:"COLOK JITU", diskon:6, mode:"hadiah", value:8 },
+        { name:"TENGAH TEPI", diskon:2, mode:"kei", value:-3 },
+        { name:"DASAR GENAP - KECIL", diskon:2, mode:"kei", value:10 },
+        { name:"DASAR GANJIL - BESAR", diskon:2, mode:"kei", value:-25 },
+        { name:"50 - 50", diskon:2, mode:"kei", value:-3 },
+        { name:"SHIO", diskon:5, mode:"hadiah", value:9.5 },
+        { name:"SILANG HOMO", diskon:2, mode:"kei", value:-3 },
+        { name:"KEMBANG KEMPIS KEMBAR", diskon:2, mode:"kei", value:-3 },
+        { name:"KOMBINASI", diskon:8, mode:"hadiah", value:2.6 }
+      ]
+    }
+  };
+
+  // Toto Macau (Malam 1/2/3, Sore, Siang, Pagi) rates per reference
+  // screenshots: same Diskon/Bet Full/Tepat & BB/Lainnya rates as Hongkong
+  // Lotto, but with no PRIZE category for this market.
+  var TOTOMACAU_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:66.5, mode:"hadiah", value:3000 },
+        { name:"DISKON 3D", diskon:59.5, mode:"hadiah", value:400 },
+        { name:"DISKON 2D", diskon:29.5, mode:"hadiah", value:65 }
+      ]
+    },
+    betfull: {
+      label: "Bet Full",
+      items: [
+        { name:"BET FULL 4D", diskon:0, mode:"hadiah", value:10000 },
+        { name:"BET FULL 3D", diskon:0, mode:"hadiah", value:1000 },
+        { name:"BET FULL 2D", diskon:0, mode:"hadiah", value:100 }
+      ]
+    },
+    tepatbb: {
+      label: "Tepat & BB",
+      items: [
+        { name:"4D TEPAT", diskon:0, mode:"hadiah", value:4000 },
+        { name:"4D BB", diskon:0, mode:"hadiah", value:200 },
+        { name:"3D TEPAT", diskon:0, mode:"hadiah", value:400 },
+        { name:"3D BB", diskon:0, mode:"hadiah", value:100 },
+        { name:"2D TEPAT", diskon:0, mode:"hadiah", value:70 },
+        { name:"2D BB", diskon:0, mode:"hadiah", value:20 }
+      ]
+    },
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:6, mode:"hadiah", value:1.5 },
+        { name:"COLOK BEBAS 2D(2)", diskon:10, mode:"hadiah", value:7 },
+        { name:"COLOK BEBAS 2D(3)", diskon:10, mode:"hadiah", value:11 },
+        { name:"COLOK BEBAS 2D(4)", diskon:10, mode:"hadiah", value:18 },
+        { name:"COLOK BEBAS 2D(5)", diskon:10, mode:"hadiah", value:200 },
+        { name:"COLOK NAGA(3)", diskon:10, mode:"hadiah", value:23 },
+        { name:"COLOK NAGA(4)", diskon:10, mode:"hadiah", value:35 },
+        { name:"COLOK NAGA(5)", diskon:10, mode:"hadiah", value:125 },
+        { name:"COLOK JITU", diskon:6, mode:"hadiah", value:8 },
+        { name:"TENGAH TEPI", diskon:2, mode:"kei", value:-3 },
+        { name:"DASAR GENAP - KECIL", diskon:2, mode:"kei", value:10 },
+        { name:"DASAR GANJIL - BESAR", diskon:2, mode:"kei", value:-25 },
+        { name:"50 - 50", diskon:2, mode:"kei", value:-3 },
+        { name:"SHIO", diskon:5, mode:"hadiah", value:9.5 },
+        { name:"SILANG HOMO", diskon:2, mode:"kei", value:-3 },
+        { name:"KEMBANG KEMPIS KEMBAR", diskon:2, mode:"kei", value:-3 },
+        { name:"KOMBINASI", diskon:8, mode:"hadiah", value:2.6 }
+      ]
+    }
+  };
+
+  // Toto Cambodia Live rates confirmed identical to Hongkong Lotto's rates
+  // (including the Prize category, unlike King Kong4D / Toto Macau which lack it).
+  var TOTOCAMBODIA_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:66.5, mode:"hadiah", value:3000 },
+        { name:"DISKON 3D", diskon:59.5, mode:"hadiah", value:400 },
+        { name:"DISKON 2D", diskon:29.5, mode:"hadiah", value:65 }
+      ]
+    },
+    betfull: {
+      label: "Bet Full",
+      items: [
+        { name:"BET FULL 4D", diskon:0, mode:"hadiah", value:10000 },
+        { name:"BET FULL 3D", diskon:0, mode:"hadiah", value:1000 },
+        { name:"BET FULL 2D", diskon:0, mode:"hadiah", value:100 }
+      ]
+    },
+    prize: {
+      label: "Prize",
+      items: [
+        { name:"PRIZE 1_1", diskon:0, mode:"hadiah", value:6500 },
+        { name:"PRIZE 1_2", diskon:0, mode:"hadiah", value:650 },
+        { name:"PRIZE 1_3", diskon:0, mode:"hadiah", value:70 },
+        { name:"PRIZE 2_1", diskon:0, mode:"hadiah", value:2100 },
+        { name:"PRIZE 2_2", diskon:0, mode:"hadiah", value:210 },
+        { name:"PRIZE 2_3", diskon:0, mode:"hadiah", value:20 },
+        { name:"PRIZE 3_1", diskon:0, mode:"hadiah", value:1100 },
+        { name:"PRIZE 3_2", diskon:0, mode:"hadiah", value:110 },
+        { name:"PRIZE 3_3", diskon:0, mode:"hadiah", value:8 }
+      ]
+    },
+    tepatbb: {
+      label: "Tepat & BB",
+      items: [
+        { name:"4D TEPAT", diskon:0, mode:"hadiah", value:4000 },
+        { name:"4D BB", diskon:0, mode:"hadiah", value:200 },
+        { name:"3D TEPAT", diskon:0, mode:"hadiah", value:400 },
+        { name:"3D BB", diskon:0, mode:"hadiah", value:100 },
+        { name:"2D TEPAT", diskon:0, mode:"hadiah", value:70 },
+        { name:"2D BB", diskon:0, mode:"hadiah", value:20 }
+      ]
+    },
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:6, mode:"hadiah", value:1.5 },
+        { name:"COLOK BEBAS 2D(2)", diskon:10, mode:"hadiah", value:7 },
+        { name:"COLOK BEBAS 2D(3)", diskon:10, mode:"hadiah", value:11 },
+        { name:"COLOK BEBAS 2D(4)", diskon:10, mode:"hadiah", value:18 },
+        { name:"COLOK BEBAS 2D(5)", diskon:10, mode:"hadiah", value:200 },
+        { name:"COLOK NAGA(3)", diskon:10, mode:"hadiah", value:23 },
+        { name:"COLOK NAGA(4)", diskon:10, mode:"hadiah", value:35 },
+        { name:"COLOK NAGA(5)", diskon:10, mode:"hadiah", value:125 },
+        { name:"COLOK JITU", diskon:6, mode:"hadiah", value:8 },
+        { name:"TENGAH TEPI", diskon:2, mode:"kei", value:-3 },
+        { name:"DASAR GENAP - KECIL", diskon:2, mode:"kei", value:10 },
+        { name:"DASAR GANJIL - BESAR", diskon:2, mode:"kei", value:-25 },
+        { name:"50 - 50", diskon:2, mode:"kei", value:-3 },
+        { name:"SHIO", diskon:5, mode:"hadiah", value:9.5 },
+        { name:"SILANG HOMO", diskon:2, mode:"kei", value:-3 },
+        { name:"KEMBANG KEMPIS KEMBAR", diskon:2, mode:"kei", value:-3 },
+        { name:"KOMBINASI", diskon:8, mode:"hadiah", value:2.6 }
+      ]
+    }
+  };
+
+  var MARKET_NAMES = [
+    "HONGKONG LOTTO",
+    "SYDNEY LOTTO",
+    "KING KONG4D MALAM",
+    "KING KONG4D SORE",
+    "Toto Cambodia Live",
+    "TOTO MACAU MALAM 3",
+    "PCSO",
+    "MAGNUM4D",
+    "NEVADA",
+    "CHELSEA21",
+    "CHELSEA19",
+    "CHELSEA15",
+    "CHELSEA11",
+    "BULLSEYE",
+    "POIPET22",
+    "POIPET19",
+    "POIPET15",
+    "POIPET12",
+    "CALIFORNIA",
+    "BRUNEI21",
+    "BRUNEI14",
+    "BRUNEI02",
+    "CAROLINA EVENING",
+    "BANGKOK 0930",
+    "BANGKOK 0130",
+    "HUAHIN2100",
+    "HUAHIN1630",
+    "HUAHIN0100",
+    "NEW YORK EVENING",
+    "NEW YORK MIDDAY",
+    "FLORIDA EVENING",
+    "FLORIDA MIDDAY",
+    "KENTUCKY EVENING",
+    "KENTUCKY MIDDAY",
+    "TOTO MACAU MALAM 2",
+    "TOTO MACAU MALAM 1",
+    "TOTO MACAU SORE",
+    "TOTO MACAU SIANG",
+    "TOTO MACAU PAGI",
+    "OREGON 12",
+    "OREGON 09",
+    "OREGON 06",
+    "OREGON 03",
+    "NORTH CAROLINA DAY",
+    "SINGAPORE"
+  ];
+
+  // Market list. Only Hongkong Lotto has confirmed real rates from the
+  // reference screenshots. Every other market below is wired to the same
+  // rate table as a placeholder so the dropdown is fully functional;
+  // update MARKETS[...].categories with the correct numbers per market
+  // whenever the real rates for that pasaran are available.
+  var MARKETS = {};
+  MARKET_NAMES.forEach(function(name){
+    MARKETS[name] = { categories: HK_CATEGORIES };
+  });
+  MARKETS["SYDNEY LOTTO"] = { categories: SYDNEY_CATEGORIES };
+  MARKETS["KING KONG4D MALAM"] = { categories: KINGKONG_CATEGORIES };
+  MARKETS["KING KONG4D SORE"] = { categories: KINGKONG_CATEGORIES };
+  ["TOTO MACAU MALAM 3","TOTO MACAU MALAM 2","TOTO MACAU MALAM 1",
+   "TOTO MACAU SORE","TOTO MACAU SIANG","TOTO MACAU PAGI"].forEach(function(name){
+    MARKETS[name] = { categories: TOTOMACAU_CATEGORIES };
+  });
+  MARKETS["Toto Cambodia Live"] = { categories: TOTOCAMBODIA_CATEGORIES };
+  MARKETS["SINGAPORE"] = { categories: TOTOMACAU_CATEGORIES };
+  ["CHELSEA21","CHELSEA19","CHELSEA15","CHELSEA11",
+   "POIPET22","POIPET19","POIPET15","POIPET12",
+   "BRUNEI21","BRUNEI14","BRUNEI02",
+   "BANGKOK 0930","BANGKOK 0130",
+   "HUAHIN2100","HUAHIN1630","HUAHIN0100",
+   "NEVADA","MAGNUM4D"].forEach(function(name){
+    MARKETS[name] = { categories: TOTOCAMBODIA_CATEGORIES };
+  });
+  ["PCSO","BULLSEYE","CALIFORNIA",
+   "OREGON 12","OREGON 09","OREGON 06","OREGON 03",
+   "KENTUCKY EVENING","KENTUCKY MIDDAY",
+   "FLORIDA EVENING","FLORIDA MIDDAY",
+   "NEW YORK EVENING","NEW YORK MIDDAY",
+   "CAROLINA EVENING","NORTH CAROLINA DAY"].forEach(function(name){
+    MARKETS[name] = { categories: TOTOMACAU_CATEGORIES };
+  });
+
+  var TAB_ORDER = ["semua","diskon","betfull","prize","tepatbb","lainnya"];
+  var TAB_LABELS = {
+    semua:"SEMUA", diskon:"DISKON", betfull:"BET FULL",
+    prize:"PRIZE", tepatbb:"TEPAT & BB", lainnya:"LAINNYA"
+  };
+
+  var currentMarket = "HONGKONG LOTTO";
+  var currentTab = "semua";
+
+  // ---------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------
+  function formatNumber(n){
+    return Math.round(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+
+  function metaText(item){
+    if(item.mode === "hadiah"){
+      var v = (item.value % 1 === 0) ? item.value : item.value;
+      return "Diskon : " + item.diskon + "% | Hadiah : x" + v;
+    }
+    var sign = item.value >= 0 ? "" : "";
+    return "Diskon : " + item.diskon + "% | Kei : " + item.value + "%";
+  }
+
+  function calc(item, nominal){
+    var bayar, menang;
+    if(item.mode === "hadiah"){
+      bayar = nominal * (1 - item.diskon / 100);
+      menang = nominal * item.value;
+    } else {
+      if(item.value >= 0){
+        bayar = nominal * (1 - item.diskon / 100);
+        menang = nominal * (1 + item.value / 100);
+      } else {
+        bayar = nominal * (1 - item.diskon / 100) * (1 + Math.abs(item.value) / 100);
+        menang = nominal;
+      }
+    }
+    bayar = Math.round(bayar);
+    menang = Math.round(menang);
+    return { bayar: bayar, menang: menang, total: bayar + menang };
+  }
+
+  // ---------------------------------------------------------------------
+  // DOM builders
+  // ---------------------------------------------------------------------
+  function clear(el){ while(el.firstChild){ el.removeChild(el.firstChild); } }
+
+  function buildMarketDropdown(){
+    var toggle = document.getElementById("marketToggle");
+    var list = document.getElementById("marketList");
+    var label = document.getElementById("marketLabel");
+    clear(list);
+
+    Object.keys(MARKETS).forEach(function(name){
+      var item = document.createElement("div");
+      item.className = "market-item" + (name === currentMarket ? " active" : "");
+      item.textContent = name;
+      item.addEventListener("click", function(){
+        currentMarket = name;
+        label.textContent = name;
+        list.classList.remove("show");
+        toggle.classList.remove("open");
+        renderContent();
+        buildMarketDropdown();
+      });
+      list.appendChild(item);
+    });
+
+    toggle.onclick = function(){
+      list.classList.toggle("show");
+      toggle.classList.toggle("open");
+    };
+
+    document.addEventListener("click", function(e){
+      if(!toggle.contains(e.target) && !list.contains(e.target)){
+        list.classList.remove("show");
+        toggle.classList.remove("open");
+      }
+    });
+  }
+
+  function availableTabs(){
+    var categories = MARKETS[currentMarket].categories;
+    return ["semua"].concat(TAB_ORDER.slice(1).filter(function(tab){
+      return !!categories[tab];
+    }));
+  }
+
+  function buildTabs(){
+    var tabsEl = document.getElementById("tabs");
+    clear(tabsEl);
+    availableTabs().forEach(function(tab){
+      var btn = document.createElement("button");
+      btn.className = "tab-btn" + (tab === currentTab ? " active" : "");
+      btn.textContent = TAB_LABELS[tab];
+      btn.addEventListener("click", function(){
+        currentTab = tab;
+        renderContent();
+      });
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  function buildCard(item, showTotal){
+    var card = document.createElement("div");
+    card.className = "card";
+
+    var h3 = document.createElement("h3");
+    h3.textContent = item.name;
+    card.appendChild(h3);
+
+    var meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = metaText(item);
+    card.appendChild(meta);
+
+    var input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.placeholder = "Input Nominal Taruhan";
+    card.appendChild(input);
+
+    var btnRow = document.createElement("div");
+    btnRow.className = "btn-row";
+
+    var btnHitung = document.createElement("button");
+    btnHitung.className = "btn btn-hitung";
+    btnHitung.textContent = "HITUNG";
+
+    var btnReset = document.createElement("button");
+    btnReset.className = "btn btn-reset";
+    btnReset.textContent = "RESET";
+
+    btnRow.appendChild(btnHitung);
+    btnRow.appendChild(btnReset);
+    card.appendChild(btnRow);
+
+    var resultHolder = document.createElement("div");
+    card.appendChild(resultHolder);
+
+    btnHitung.addEventListener("click", function(){
+      clear(resultHolder);
+      var raw = input.value.replace(/[^0-9.]/g, "");
+      var nominal = parseFloat(raw);
+      if(!raw || isNaN(nominal) || nominal <= 0){
+        var err = document.createElement("div");
+        err.className = "error-text";
+        err.textContent = "Masukkan nominal taruhan yang valid";
+        resultHolder.appendChild(err);
+        return;
+      }
+      var res = calc(item, nominal);
+
+      var box = document.createElement("div");
+      box.className = "result-box";
+
+      var lineBayar = document.createElement("div");
+      lineBayar.className = "result-line bayar";
+      var labelB = document.createElement("span");
+      labelB.className = "label";
+      labelB.textContent = "BAYAR: ";
+      var valB = document.createElement("span");
+      valB.className = "value";
+      valB.textContent = formatNumber(res.bayar);
+      lineBayar.appendChild(labelB);
+      lineBayar.appendChild(valB);
+
+      var lineMenang = document.createElement("div");
+      lineMenang.className = "result-line menang";
+      var labelM = document.createElement("span");
+      labelM.className = "label";
+      labelM.textContent = "MENANG: ";
+      var valM = document.createElement("span");
+      valM.className = "value";
+      valM.textContent = formatNumber(res.menang);
+      lineMenang.appendChild(labelM);
+      lineMenang.appendChild(valM);
+
+      box.appendChild(lineBayar);
+      box.appendChild(lineMenang);
+
+      if(showTotal){
+        var lineTotal = document.createElement("div");
+        lineTotal.className = "result-line total";
+        var labelT = document.createElement("span");
+        labelT.className = "label";
+        labelT.textContent = "TOTAL: ";
+        var valT = document.createElement("span");
+        valT.className = "value";
+        valT.textContent = formatNumber(res.total);
+        lineTotal.appendChild(labelT);
+        lineTotal.appendChild(valT);
+        box.appendChild(lineTotal);
+      }
+
+      resultHolder.appendChild(box);
+    });
+
+    btnReset.addEventListener("click", function(){
+      input.value = "";
+      clear(resultHolder);
+    });
+
+    return card;
+  }
+
+  function buildGrid(items, showTotal){
+    var grid = document.createElement("div");
+    grid.className = "cards-grid";
+    items.forEach(function(item){
+      grid.appendChild(buildCard(item, !!showTotal));
+    });
+    return grid;
+  }
+
+  function buildPill(text){
+    var wrap = document.createElement("div");
+    wrap.className = "section-pill-wrap";
+    var pill = document.createElement("span");
+    pill.className = "section-pill";
+    pill.textContent = text;
+    wrap.appendChild(pill);
+    return wrap;
+  }
+
+  function renderContent(){
+    var categories = MARKETS[currentMarket].categories;
+    if(currentTab !== "semua" && !categories[currentTab]){
+      currentTab = "semua";
+    }
+    buildTabs();
+    var content = document.getElementById("content");
+    clear(content);
+
+    var activePill = document.getElementById("activePill");
+    var activePillText = document.getElementById("activePillText");
+
+    if(currentTab === "semua"){
+      activePill.style.display = "none";
+      TAB_ORDER.slice(1).forEach(function(key){
+        var group = categories[key];
+        if(!group) return;
+        var block = document.createElement("div");
+        block.className = "group-block";
+        block.appendChild(buildPill(group.label));
+        block.appendChild(buildGrid(group.items, group.showTotal));
+        content.appendChild(block);
+      });
+    } else {
+      var group = categories[currentTab];
+      activePill.style.display = "block";
+      activePillText.textContent = group.label;
+      content.appendChild(buildGrid(group.items, group.showTotal));
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // init
+  // ---------------------------------------------------------------------
+  buildMarketDropdown();
+  renderContent();
+
+})();
+</script>
+</body>
+</html>
