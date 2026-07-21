@@ -350,7 +350,7 @@
 
 <div id="pagePng">
 <div class="topbar">
-  <h1>PERHITUNGAN HADIAH TOGEL PNG</h1>
+  <h1>PERHITUNGAN HADIAH TOGEL</h1>
 </div>
 
 <div class="panel">
@@ -930,6 +930,31 @@
   };
   IDN_MARKETS["HONGKONG"] = { categories: IDN_HK_SYD_CATEGORIES };
   IDN_MARKETS["SYDNEY"] = { categories: IDN_HK_SYD_CATEGORIES };
+
+  // Perhitungan Togel IDN: PCSO / Bullseye / California / Oregon / Kentucky /
+  // Florida / Carolina / New York rates per reference screenshots. Same
+  // Diskon (5 items) and Lainnya (19 items) as Hongkong/Sydney's IDN table,
+  // but Bet Full is x10000/x1000/x100 and there is no Prize category.
+  var IDN_US_CATEGORIES = {
+    diskon: IDN_HK_SYD_CATEGORIES.diskon,
+    betfull: {
+      label: "Bet Full",
+      items: [
+        { name:"BET FULL 4D", diskon:0, mode:"hadiah", value:10000 },
+        { name:"BET FULL 3D", diskon:0, mode:"hadiah", value:1000 },
+        { name:"BET FULL 2D", diskon:0, mode:"hadiah", value:100 }
+      ]
+    },
+    tepatbb: IDN_HK_SYD_CATEGORIES.tepatbb,
+    lainnya: IDN_HK_SYD_CATEGORIES.lainnya
+  };
+  ["PCSO","BULLSEYE","CALIFORNIA","OREGON",
+   "KENTUCKY EVE","KENTUCKY MID",
+   "FLORIDA EVE","FLORIDA MID",
+   "CAROLINA EVE","CAROLINA DAY",
+   "NEW YORK MID","NEW YORK EVE"].forEach(function(name){
+    IDN_MARKETS[name] = { categories: IDN_US_CATEGORIES };
+  });
 
   // ---------------------------------------------------------------------
   // Helpers
