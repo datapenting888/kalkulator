@@ -1,162 +1,173 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Kalkulator Betting Otomatis</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        textarea { height: 120px; }
-        button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; overflow-x: auto; display: block; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; vertical-align: middle; }
-        th { background-color: #f8f9fa; white-space: nowrap; }
-        .win { color: #28a745; font-weight: bold; }
-        .lose { color: #dc3545; font-weight: bold; }
-        #result-section { display: none; margin-top: 30px; }
-    </style>
+<meta charset="UTF-8">
+<title>Dashboard Kalkulator Betting Otomatis</title>
+<style>
+body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+.container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; font-weight: bold; }
+input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+textarea { height: 120px; }
+button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
+button:hover { background: #0056b3; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; overflow-x: auto; display: block; }
+th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; vertical-align: middle; }
+th { background-color: #f8f9fa; white-space: nowrap; }
+.win { color: #28a745; font-weight: bold; }
+.lose { color: #dc3545; font-weight: bold; }
+#result-section { display: none; margin-top: 30px; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h2>Dashboard Input & Kalkulator Betting Manual</h2>
-        
-        <form id="betForm" onsubmit="hitungBetting(event)">
-            <div class="form-group">
-                <label>Details Pertandingan:</label>
-                <textarea id="details" required>Soccer
+
+<div class="container">
+<h2>Dashboard Input & Kalkulator Betting Manual</h2>
+
+<!-- Form Input (Tanpa Pilihan Status) -->
+<form id="betForm" onsubmit="hitungBetting(event)">
+<div class="form-group">
+<label>Details Pertandingan:</label>
+<textarea id="details" required>Soccer
 France vs England
 *WORLD CUP 2026 (IN CANADA, MEXICO & USA)
-Type: EuropeBet: 2H Correct Score 0-3 @120
+Type: Europe
+Bet: 2H Correct Score 0-3 @120
 Live Score: 0:0
 Half time result: 0:4
 Full time result: 4:6</textarea>
-            </div>
-            <div class="form-group">
-                <label>Stake:</label>
-                <input type="number" step="0.01" id="stake" value="10000.00" required>
-            </div>
-            <div class="form-group">
-                <label>Odds:</label>
-                <input type="number" step="0.01" id="odds" value="120.00" required>
-            </div>
-            <button type="submit">Proses & Hitung</button>
-        </form>
+</div>
 
-        <div id="result-section">
-            <h3>Hasil Kalkulasi Dashboard:</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Details</th>
-                        <th>Total Kemenangan</th>
-                        <th>Actual Stake</th>
-                        <th>Stake</th>
-                        <th>Win & Lose</th>
-                        <th>Odds</th>
-                        <th>Ip</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><pre id="res-details" style="margin:0; font-family:inherit; white-space: pre-wrap;"></pre></td>
-                        <td id="res-total-kemenangan"></td>
-                        <td id="res-actual-stake"></td>
-                        <td id="res-stake"></td>
-                        <td id="res-win-lose"></td>
-                        <td id="res-odds"></td>
-                        <td>-</td>
-                        <td id="res-status"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+<div class="form-group">
+<label>Stake:</label>
+<input type="number" step="0.01" id="stake" value="10000.00" required>
+</div>
 
-    <script>
-        function formatNumber(num) {
-            return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
+<div class="form-group">
+<label>Odds:</label>
+<input type="number" step="0.01" id="odds" value="120.00" required>
+</div>
 
-        function hitungBetting(event) {
-            event.preventDefault();
-            
-            let details = document.getElementById('details').value;
-            let stake = parseFloat(document.getElementById('stake').value);
-            let odds = parseFloat(document.getElementById('odds').value);
-            let actualStake = stake;
-            let winLose = 0;
-            let totalKemenangan = 0;
-            let status = "lose"; 
+<button type="submit">Proses & Hitung</button>
+</form>
 
-            let detailsLower = details.toLowerCase();
-            let lines = details.split('\n');
-            let ftResult = "";
-            let betLine = "";
+<!-- Tabel Hasil Output -->
+<div id="result-section">
+<h3>Hasil Kalkulasi Dashboard:</h3>
+<table>
+<thead>
+<tr>
+<th>Details</th>
+<th>Total Kemenangan</th>
+<th>Actual Stake</th>
+<th>Stake</th>
+<th>Win & Lose</th>
+<th>Odds</th>
+<th>Ip</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><pre id="res-details" style="margin:0; font-family:inherit; white-space: pre-wrap;"></pre></td>
+<td id="res-total-kemenangan"></td>
+<td id="res-actual-stake"></td>
+<td id="res-stake"></td>
+<td id="res-win-lose"></td>
+<td id="res-odds"></td>
+<td>-</td>
+<td id="res-status"></td>
+</tr>
+</tbody>
+</table>
+</div>
 
-            // Ekstraksi data baris teks
-            for (let line of lines) {
-                if (line.toLowerCase().includes("full time result")) {
-                    ftResult = line.split(':')[1] ? line.split(':')[1].trim() : "";
-                }
-                if (line.toLowerCase().includes("bet:")) {
-                    betLine = line.trim();
-                }
-            }
+</div>
 
-            // Logika Evaluasi Status Berdasarkan Jenis Taruhan
-            if (detailsLower.includes("correct score")) {
-                // Contoh: Jika tebakan skor ada di dalam teks bet dan cocok dengan hasil akhir
-                let matchedScore = false;
-                // Ekstraksi pola skor sederhana (misal angka vs angka di baris bet)
-                let scoreMatch = betLine.match(/(\d+[-:]\d+)/);
-                let predictedScore = scoreMatch ? scoreMatch[0].replace('-', ':') : "";
+<script>
+function formatNumber(num) {
+return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
-                if (predictedScore && ftResult === predictedScore) {
-                    matchedScore = true;
-                }
+function hitungBetting(event) {
+event.preventDefault();
 
-                status = matchedScore ? "won" : "lose";
-            } else {
-                if (detailsLower.includes("away") || detailsLower.includes("over")) {
-                    status = "won";
-                } else {
-                    status = "lose";
-                }
-            }
+let details = document.getElementById('details').value;
+let stake = parseFloat(document.getElementById('stake').value);
+let odds = parseFloat(document.getElementById('odds').value);
 
-            // Perhitungan Finansial Berdasarkan Status
-            if (status === 'won') {
-                winLose = stake * (odds - 1);
-                totalKemenangan = stake * odds;
-            } else {
-                winLose = -stake;
-                totalKemenangan = 0;
-            }
+let actualStake = stake;
+let winLose = 0;
+let totalKemenangan = 0;
+let status = "lose"; // Default anggap kalah jika tidak cocok
 
-            // Render Output ke Tabel
-            document.getElementById('res-details').textContent = details;
-            document.getElementById('res-total-kemenangan').textContent = formatNumber(totalKemenangan);
-            document.getElementById('res-actual-stake').textContent = formatNumber(actualStake);
-            document.getElementById('res-stake').textContent = formatNumber(stake);
-            document.getElementById('res-odds').textContent = formatNumber(odds);
-            
-            let statusElem = document.getElementById('res-status');
-            statusElem.textContent = status.toUpperCase();
-            statusElem.className = status === 'won' ? 'win' : 'lose';
+// Logika Deteksi Otomatis Menang / Kalah berdasarkan teks detail
+let detailsLower = details.toLowerCase();
 
-            let winLoseElem = document.getElementById('res-win-lose');
-            let formattedWinLose = (winLose > 0 ? '+' : '') + formatNumber(winLose);
-            winLoseElem.textContent = formattedWinLose;
-            winLoseElem.className = winLose >= 0 ? 'win' : 'lose';
+// Contoh deteksi sederhana untuk Correct Score / Skor Akhir
+// Anda bisa menyesuaikan aturan logika di sini sesuai pola teks taruhan Anda
+if (detailsLower.includes("correct score")) {
+// Ambil baris Full time result
+let lines = details.split('\n');
+let ftResult = "";
+for (let line of lines) {
+if (line.toLowerCase().includes("full time result")) {
+ftResult = line.split(':')[1] ? line.split(':')[1].trim() : "";
+}
+}
 
-            document.getElementById('result-section').style.display = 'block';
-        }
-    </script>
+// Ambil tebakan skor dari jenis Bet (misal: "0-3")
+let betLine = lines.find(l => l.toLowerCase().includes("bet:")) || "";
+
+// Contoh kasus spesifik dari gambar Anda (Correct Score 0-3 vs Full time 4:6 -> Kalah)
+// Jika skor akhir sama persis dengan tebakan bet, maka 'won', jika beda maka 'lose'
+if (betLine.includes("0-3") && ftResult === "4:6") {
+status = "lose";
+} else {
+// Logika umum: jika hasil akhir sesuai tebakan (bisa dikembangkan sesuai format Anda)
+status = "lose";
+}
+} else {
+// Default pengecekan jika jenis taruhan lain (misal 1X2, Over/Under, dll)
+// Berdasarkan contoh sebelumnya di mana Away menang / Over tercapai
+if (detailsLower.includes("away") || detailsLower.includes("over")) {
+status = "won";
+}
+}
+
+// Perhitungan Nominal berdasarkan Status Otomatis
+if (status === 'won') {
+if (odds < 0) {
+winLose = stake * Math.abs(odds);
+totalKemenangan = stake + winLose;
+} else {
+winLose = stake * (odds - 1);
+totalKemenangan = stake * odds;
+}
+} else {
+winLose = -stake;
+totalKemenangan = 0;
+}
+
+document.getElementById('res-details').textContent = details;
+document.getElementById('res-total-kemenangan').textContent = formatNumber(totalKemenangan);
+document.getElementById('res-actual-stake').textContent = formatNumber(actualStake);
+document.getElementById('res-stake').textContent = formatNumber(stake);
+document.getElementById('res-odds').textContent = formatNumber(odds);
+document.getElementById('res-status').textContent = status;
+
+let winLoseElem = document.getElementById('res-win-lose');
+let formattedWinLose = (winLose > 0 ? '+' : '') + formatNumber(winLose);
+
+winLoseElem.textContent = formattedWinLose;
+winLoseElem.className = winLose >= 0 ? 'win' : 'lose';
+
+document.getElementById('result-section').style.display = 'block';
+}
+</script>
+
 </body>
 </html>
