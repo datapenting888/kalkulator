@@ -46,14 +46,14 @@ Full time result: 4:6</textarea>
         
         <div class="form-group">
             <label>Odds:</label>
-            <input type="number" step="0.01" id="odds" value="120.00" required>
+            <input type="number" step="0.01" id="odds" value="120" required>
         </div>
 
         <div class="form-group">
             <label>Status:</label>
             <select id="status">
-                <option value="won">won</option>
-                <option value="lose" selected>lose</option>
+                <option value="won">Won</option>
+                <option value="lost" selected>Lost</option>
             </select>
         </div>
         
@@ -115,11 +115,14 @@ function hitungBetting(event) {
             winLose = stake * Math.abs(odds);
             totalKemenangan = stake + winLose;
         } else {
-            winLose = stake * (odds - 1);
-            totalKemenangan = stake * odds;
+            // Contoh Odds 120 (Format Indo/Malay atau format khusus odds tinggi)
+            // Jika odds format desimal biasa > 1: stake * (odds - 1)
+            // Sesuaikan jika odds 120 artinya pengalian langsung
+            winLose = stake * odds; 
+            totalKemenangan = stake + winLose;
         }
     } else {
-        // Jika status kalah (lose)
+        // Jika status Lost (Kalah)
         winLose = -stake;
         totalKemenangan = 0.00;
     }
@@ -132,7 +135,7 @@ function hitungBetting(event) {
     document.getElementById('res-status').textContent = status;
 
     let winLoseElem = document.getElementById('res-win-lose');
-    let formattedWinLose = (winLose >= 0 ? '+' : '') + formatNumber(winLose);
+    let formattedWinLose = (winLose > 0 ? '+' : '') + formatNumber(winLose);
     
     winLoseElem.textContent = formattedWinLose;
     winLoseElem.className = winLose >= 0 ? 'win' : 'lose';
