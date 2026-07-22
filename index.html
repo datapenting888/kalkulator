@@ -2,83 +2,101 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Kalkulator Betting Manual</title>
+    <title>Dashboard Kalkulator Betting Akurat</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        textarea { height: 100px; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        textarea { height: 120px; }
         button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
         button:hover { background: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
-        th { background-color: #f8f9fa; }
-        .win { color: green; font-weight: bold; }
-        pre { margin: 0; font-family: inherit; white-space: pre-wrap; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; overflow-x: auto; display: block; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; vertical-align: middle; }
+        th { background-color: #f8f9fa; white-space: nowrap; }
+        .win { color: #28a745; font-weight: bold; }
+        .lose { color: #dc3545; font-weight: bold; }
+        #result-section { display: none; margin-top: 30px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Dashboard Input & Kalkulator Betting Manual (HTML/JS)</h2>
+    <h2>Dashboard Input & Kalkulator Betting Manual</h2>
     
     <!-- Form Input Data -->
     <form id="betForm" onsubmit="hitungBetting(event)">
         <div class="form-group">
-            <label>Username:</label>
-            <input type="text" id="username" value="TIDfAVdR8toOMG3ns" required>
-        </div>
-        
-        <div class="form-group">
             <label>Details Pertandingan:</label>
             <textarea id="details" required>Soccer
-England vs Argentina
+France vs England
 *WORLD CUP 2026 (IN CANADA, MEXICO & USA)
-Type: Europe
-Bet: FT.1X2 away 0 @3.15
-Live Score: 0:0
-Half time result: 0:0
-Full time result: 1:2</textarea>
+Type: Indonesia
+Bet: Over/Under over 5.5 @-2.18
+Live Score: 0:4
+Half time result: 0:4
+Full time result: 4:6</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Currency:</label>
+            <input type="text" id="currency" value="IDR" required>
         </div>
         
         <div class="form-group">
-            <label>Stake (Modal):</label>
-            <input type="number" step="0.01" id="stake" value="50000" required>
+            <label>Actual Stake:</label>
+            <input type="number" step="0.01" id="actual_stake" value="78480.00" required>
+        </div>
+
+        <div class="form-group">
+            <label>Stake:</label>
+            <input type="number" step="0.01" id="stake" value="36000.00" required>
         </div>
         
         <div class="form-group">
             <label>Odds:</label>
-            <input type="number" step="0.01" id="odds" value="3.15" required>
+            <input type="number" step="0.01" id="odds" value="-2.18" required>
+        </div>
+
+        <div class="form-group">
+            <label>Status:</label>
+            <select id="status">
+                <option value="won">won</option>
+                <option value="lost">lost</option>
+            </select>
         </div>
         
         <button type="submit">Proses & Hitung</button>
     </form>
 
     <!-- Tabel Hasil Output -->
-    <div id="resultSection" style="display: none;">
-        <h3 style="margin-top: 30px;">Hasil Kalkulasi Dashboard:</h3>
+    <div id="result-section">
+        <h3>Hasil Kalkulasi Dashboard:</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Username</th>
                     <th>Details</th>
                     <th>Currency</th>
+                    <th>Actual Stake</th>
                     <th>Stake</th>
-                    <th>Odds</th>
                     <th>Win & Lose</th>
+                    <th>Odds</th>
+                    <th>Ip</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td id="resUsername"></td>
-                    <td><pre id="resDetails"></pre></td>
-                    <td>IDR</td>
-                    <td id="resStake"></td>
-                    <td id="resOdds"></td>
-                    <td id="resWinLose" class="win"></td>
+                    <td><pre id="res-details" style="margin:0; font-family:inherit; white-space: pre-wrap;"></pre></td>
+                    <td id="res-currency"></td>
+                    <td id="res-actual-stake"></td>
+                    <td id="res-stake"></td>
+                    <td id="res-win-lose"></td>
+                    <td id="res-odds"></td>
+                    <td>-</td>
+                    <td id="res-status"></td>
                 </tr>
             </tbody>
         </table>
@@ -87,27 +105,50 @@ Full time result: 1:2</textarea>
 </div>
 
 <script>
+function formatNumber(num) {
+    return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 function hitungBetting(event) {
-    event.preventDefault(); // Mencegah halaman reload
+    event.preventDefault();
 
-    // Ambil nilai dari form
-    const username = document.getElementById('username').value;
-    const details = document.getElementById('details').value;
-    const stake = parseFloat(document.getElementById('stake').value);
-    const odds = parseFloat(document.getElementById('odds').value);
+    // Ambil nilai dari input form
+    let details = document.getElementById('details').value;
+    let currency = document.getElementById('currency').value;
+    let actualStake = parseFloat(document.getElementById('actual_stake').value);
+    let stake = parseFloat(document.getElementById('stake').value);
+    let odds = parseFloat(document.getElementById('odds').value);
+    let status = document.getElementById('status').value;
 
-    // Rumus perhitungan Win & Lose (Stake * (Odds - 1))
-    const winLose = stake * (odds - 1);
+    let winLose = 0;
 
-    // Masukkan ke dalam tabel HTML
-    document.getElementById('resUsername').textContent = username;
-    document.getElementById('resDetails').textContent = details;
-    document.getElementById('resStake').textContent = stake.toLocaleString('id-ID', { minimumFractionDigits: 2 });
-    document.getElementById('resOdds').textContent = odds.toFixed(2);
-    document.getElementById('resWinLose').textContent = "+" + winLose.toLocaleString('id-ID', { minimumFractionDigits: 2 });
+    // Logika Perhitungan Akurat
+    if (status === 'won') {
+        if (odds < 0) {
+            winLose = stake * Math.abs(odds);
+        } else {
+            winLose = stake * (odds - 1);
+        }
+    } else {
+        winLose = -stake;
+    }
+
+    // Masukkan hasil ke dalam elemen tabel
+    document.getElementById('res-details').textContent = details;
+    document.getElementById('res-currency').textContent = currency;
+    document.getElementById('res-actual-stake').textContent = formatNumber(actualStake);
+    document.getElementById('res-stake').textContent = formatNumber(stake);
+    document.getElementById('res-odds').textContent = formatNumber(odds);
+    document.getElementById('res-status').textContent = status;
+
+    let winLoseElem = document.getElementById('res-win-lose');
+    let formattedWinLose = (winLose >= 0 ? '+' : '') + formatNumber(winLose);
+    
+    winLoseElem.textContent = formattedWinLose;
+    winLoseElem.className = winLose >= 0 ? 'win' : 'lose';
 
     // Tampilkan bagian hasil
-    document.getElementById('resultSection').style.display = 'block';
+    document.getElementById('result-section').style.display = 'block';
 }
 </script>
 
