@@ -9,7 +9,7 @@
         h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        input[type="number"], select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         textarea { height: 120px; }
         button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
         button:hover { background: #0056b3; }
@@ -30,23 +30,31 @@
         <div class="form-group">
             <label>Details Pertandingan:</label>
             <textarea id="details" required>Soccer
-England vs Argentina
+France vs England
 *WORLD CUP 2026 (IN CANADA, MEXICO & USA)
 Type: Europe
-Bet: FT.1X2 away 0 @3.15
+Bet: 2H Correct Score 0-3 @120
 Live Score: 0:0
-Half time result: 0:0
-Full time result: 1:2</textarea>
+Half time result: 0:4
+Full time result: 4:6</textarea>
         </div>
 
         <div class="form-group">
             <label>Stake:</label>
-            <input type="number" step="0.01" id="stake" value="50000.00" required>
+            <input type="number" step="0.01" id="stake" value="10000.00" required>
         </div>
         
         <div class="form-group">
             <label>Odds:</label>
-            <input type="number" step="0.01" id="odds" value="3.15" required>
+            <input type="number" step="0.01" id="odds" value="120.00" required>
+        </div>
+
+        <div class="form-group">
+            <label>Status:</label>
+            <select id="status">
+                <option value="won">won</option>
+                <option value="lose" selected>lose</option>
+            </select>
         </div>
         
         <button type="submit">Proses & Hitung</button>
@@ -77,7 +85,7 @@ Full time result: 1:2</textarea>
                     <td id="res-win-lose"></td>
                     <td id="res-odds"></td>
                     <td>-</td>
-                    <td id="res-status">won</td>
+                    <td id="res-status"></td>
                 </tr>
             </tbody>
         </table>
@@ -96,21 +104,24 @@ function hitungBetting(event) {
     let details = document.getElementById('details').value;
     let stake = parseFloat(document.getElementById('stake').value);
     let odds = parseFloat(document.getElementById('odds').value);
+    let status = document.getElementById('status').value;
 
     let actualStake = stake; 
     let winLose = 0;
     let totalKemenangan = 0;
 
-    if (odds < 0) {
-        // Logika untuk odds minus
-        winLose = stake * Math.abs(odds);
-        totalKemenangan = stake + winLose; // Atau sesuai kebutuhan odds minus
+    if (status === 'won') {
+        if (odds < 0) {
+            winLose = stake * Math.abs(odds);
+            totalKemenangan = stake + winLose;
+        } else {
+            winLose = stake * (odds - 1);
+            totalKemenangan = stake * odds;
+        }
     } else {
-        // Logika untuk odds positif (contoh: 3.15)
-        // Win & Lose bersih = Stake * (Odds - 1) -> 50,000 * 2.15 = 107,500
-        winLose = stake * (odds - 1);
-        // Total Kemenangan (Payout) = Stake * Odds -> 50,000 * 3.15 = 157,500
-        totalKemenangan = stake * odds;
+        // Jika status kalah (lose)
+        winLose = -stake;
+        totalKemenangan = 0.00;
     }
 
     document.getElementById('res-details').textContent = details;
@@ -118,6 +129,7 @@ function hitungBetting(event) {
     document.getElementById('res-actual-stake').textContent = formatNumber(actualStake);
     document.getElementById('res-stake').textContent = formatNumber(stake);
     document.getElementById('res-odds').textContent = formatNumber(odds);
+    document.getElementById('res-status').textContent = status;
 
     let winLoseElem = document.getElementById('res-win-lose');
     let formattedWinLose = (winLose >= 0 ? '+' : '') + formatNumber(winLose);
