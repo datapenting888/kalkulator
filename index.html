@@ -23,13 +23,13 @@
 <body>
 
 <div class="container">
-    <h2>Dashboard Kalkulator Betting Otomatis (Parser Detail Teks)</h2>
+    <h2>Dashboard Kalkulator Betting Otomatis</h2>
     
     <!-- Form Input Data -->
     <form id="betForm" onsubmit="hitungBetting(event)">
         
         <div class="form-group">
-            <label>Details Pertandingan (Tempel teks lengkap di sini, misal: Bet: ... @... ):</label>
+            <label>Details Pertandingan (Tempel teks lengkap di sini):</label>
             <textarea id="details" required>Soccer
 France vs England
 *WORLD CUP 2026 (IN CANADA, MEXICO & USA)
@@ -81,6 +81,7 @@ Full time result: 4:6</textarea>
 function hitungBetting(event) {
     event.preventDefault();
 
+    // Ambil data dari form
     const details = document.getElementById('details').value;
     const stake = parseFloat(document.getElementById('stake').value) || 0;
 
@@ -88,33 +89,32 @@ function hitungBetting(event) {
     let actualStake = stake;
     let winLose = 0;
 
-    // Ekstrak nilai Odds otomatis dari teks menggunakan Regular Expression (mencari pola "@angka" atau "@-angka")
+    // Ekstrak nilai Odds otomatis dari teks (mencari pola "@angka" atau "@-angka")
     const oddsMatch = details.match(/@\s*(-?\d+(\.\d+)?)/);
     if (oddsMatch) {
         odds = parseFloat(oddsMatch[1]);
     }
 
-    // Logika Perhitungan Berdasarkan Jenis Odds (Positif vs Negatif / Indo-Malay Odds)
+    // Logika Perhitungan Berdasarkan Jenis Odds (Positif vs Negatif)
     if (odds < 0) {
-        // Odds Negatif (Contoh: -2.18)
+        // Untuk odds negatif (contoh: -2.18)
         let absOdds = Math.abs(odds);
         actualStake = stake * absOdds;
-        winLose = stake; // Menang penuh sebesar modal awal
+        winLose = stake; 
     } else {
-        // Odds Positif (Contoh: 2.38 atau 3.15)
+        // Untuk odds positif (contoh: 2.38 atau 3.15)
         actualStake = stake;
         winLose = stake * (odds - 1);
     }
 
-    // Tampilkan ke dalam tabel HTML
+    // Masukkan hasil ke elemen tabel HTML
     document.getElementById('resDetails').textContent = details;
-    document.getElementById('resCurrency').textContent = 'IDR';
     document.getElementById('resActualStake').textContent = actualStake.toLocaleString('id-ID', { minimumFractionDigits: 2 });
     document.getElementById('resStake').textContent = stake.toLocaleString('id-ID', { minimumFractionDigits: 2 });
     document.getElementById('resWinLose').textContent = "+" + winLose.toLocaleString('id-ID', { minimumFractionDigits: 2 });
     document.getElementById('resOdds').textContent = odds.toFixed(2);
 
-    // Tampilkan bagian hasil
+    // Tampilkan tabel hasil
     document.getElementById('resultSection').style.display = 'block';
 }
 </script>
