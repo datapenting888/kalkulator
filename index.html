@@ -1,228 +1,115 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Kalkulator Taruhan</title>
-
-<style>
-body{
-    font-family:Arial,Helvetica,sans-serif;
-    background:#f4f4f4;
-    margin:20px;
-}
-
-.container{
-    max-width:1500px;
-    margin:auto;
-}
-
-h2{
-    text-align:center;
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    background:#fff;
-}
-
-th{
-    background:#1976d2;
-    color:white;
-    padding:10px;
-}
-
-td{
-    border:1px solid #ddd;
-    padding:10px;
-    vertical-align:top;
-}
-
-.win{
-    color:green;
-    font-weight:bold;
-}
-
-.lose{
-    color:red;
-    font-weight:bold;
-}
-
-.push{
-    color:orange;
-    font-weight:bold;
-}
-
-.detail{
-    line-height:1.6;
-    font-size:14px;
-}
-</style>
-
+    <meta charset="UTF-8">
+    <title>Dashboard Kalkulator Betting Manual</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        textarea { height: 100px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #f8f9fa; }
+        .win { color: green; font-weight: bold; }
+        pre { margin: 0; font-family: inherit; white-space: pre-wrap; }
+    </style>
 </head>
-
 <body>
 
 <div class="container">
-
-<h2>DASHBOARD HASIL TARUHAN</h2>
-
-<table>
-
-<tr>
-
-<th>No</th>
-
-<th>Match</th>
-
-<th>Bet</th>
-
-<th>Odds</th>
-
-<th>Stake</th>
-
-<th>Status</th>
-
-<th>Profit/Loss</th>
-
-<th>Return</th>
-
-<th>Penjelasan Detail</th>
-
-</tr>
-
-<tr>
-
-<td>1</td>
-
-<td>
-England vs Norway
-</td>
-
-<td>
-Both Teams To Score (Yes)
-</td>
-
-<td>
-1.60
-</td>
-
-<td>
-Rp50.000
-</td>
-
-<td class="win">
-MENANG
-</td>
-
-<td class="win">
-+Rp30.000
-</td>
-
-<td>
-Rp80.000
-</td>
-
-<td class="detail">
-
-<b>Analisis Taruhan :</b><br><br>
-
-Jenis taruhan adalah <b>Both Teams To Score (BTTS) - Yes</b>, yang berarti kedua tim wajib mencetak minimal satu gol selama pertandingan berlangsung.<br><br>
-
-<b>Hasil Pertandingan :</b><br>
-
-Half Time : 1 - 1<br>
-
-Full Time : 1 - 1<br><br>
-
-England berhasil mencetak 1 gol dan Norway juga berhasil mencetak 1 gol. Dengan demikian kedua tim sama-sama mencetak gol sehingga syarat taruhan BTTS Yes terpenuhi sepenuhnya.<br><br>
-
-<b>Perhitungan Pembayaran :</b><br>
-
-Stake : Rp50.000<br>
-
-Odds : 1.60<br>
-
-Return : Rp50.000 × 1.60 = <b>Rp80.000</b><br>
-
-Profit Bersih : Rp80.000 - Rp50.000 = <b>Rp30.000</b><br><br>
-
-<b>Kesimpulan :</b><br>
-
-Taruhan dinyatakan <span class="win">MENANG</span> karena kedua tim berhasil mencetak gol sesuai syarat taruhan BTTS.
-
-</td>
-
-</tr>
-
-<tr>
-
-<td>2</td>
-
-<td>
-Argentina vs Switzerland
-</td>
-
-<td>
-Over 2 Goal
-</td>
-
-<td>
-1.70
-</td>
-
-<td>
-Rp50.000
-</td>
-
-<td class="push">
-PUSH
-</td>
-
-<td>
-Rp0
-</td>
-
-<td>
-Rp50.000
-</td>
-
-<td class="detail">
-
-<b>Analisis Taruhan :</b><br><br>
-
-Jenis taruhan adalah <b>Over 2 Goal (Asian Total)</b>. Untuk menang dibutuhkan minimal 3 gol. Jika total gol tepat 2 maka taruhan dinyatakan Push dan seluruh modal dikembalikan.<br><br>
-
-<b>Hasil Pertandingan :</b><br>
-
-Half Time : 1 - 0<br>
-
-Full Time : 1 - 1<br><br>
-
-Total gol selama pertandingan adalah 2 gol.<br><br>
-
-Karena total gol tepat berada pada garis taruhan (2 Goal), maka taruhan tidak menang maupun kalah tetapi dinyatakan Push/Void.<br><br>
-
-<b>Perhitungan Pembayaran :</b><br>
-
-Stake : Rp50.000<br>
-
-Return : Rp50.000<br>
-
-Profit : Rp0<br><br>
-
-<b>Kesimpulan :</b><br>
-
-Taruhan dinyatakan <span class="push">PUSH</span> sehingga seluruh modal dikembalikan kepada pemain.
-
-</td>
-
-</tr>
-
-</table>
+    <h2>Dashboard Input & Kalkulator Betting Manual (HTML/JS)</h2>
+    
+    <!-- Form Input Data -->
+    <form id="betForm" onsubmit="hitungBetting(event)">
+        <div class="form-group">
+            <label>Username:</label>
+            <input type="text" id="username" value="TIDfAVdR8toOMG3ns" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Details Pertandingan:</label>
+            <textarea id="details" required>Soccer
+England vs Argentina
+*WORLD CUP 2026 (IN CANADA, MEXICO & USA)
+Type: Europe
+Bet: FT.1X2 away 0 @3.15
+Live Score: 0:0
+Half time result: 0:0
+Full time result: 1:2</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Stake (Modal):</label>
+            <input type="number" step="0.01" id="stake" value="50000" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Odds:</label>
+            <input type="number" step="0.01" id="odds" value="3.15" required>
+        </div>
+        
+        <button type="submit">Proses & Hitung</button>
+    </form>
+
+    <!-- Tabel Hasil Output -->
+    <div id="resultSection" style="display: none;">
+        <h3 style="margin-top: 30px;">Hasil Kalkulasi Dashboard:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Details</th>
+                    <th>Currency</th>
+                    <th>Stake</th>
+                    <th>Odds</th>
+                    <th>Win & Lose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="resUsername"></td>
+                    <td><pre id="resDetails"></pre></td>
+                    <td>IDR</td>
+                    <td id="resStake"></td>
+                    <td id="resOdds"></td>
+                    <td id="resWinLose" class="win"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
 </div>
+
+<script>
+function hitungBetting(event) {
+    event.preventDefault(); // Mencegah halaman reload
+
+    // Ambil nilai dari form
+    const username = document.getElementById('username').value;
+    const details = document.getElementById('details').value;
+    const stake = parseFloat(document.getElementById('stake').value);
+    const odds = parseFloat(document.getElementById('odds').value);
+
+    // Rumus perhitungan Win & Lose (Stake * (Odds - 1))
+    const winLose = stake * (odds - 1);
+
+    // Masukkan ke dalam tabel HTML
+    document.getElementById('resUsername').textContent = username;
+    document.getElementById('resDetails').textContent = details;
+    document.getElementById('resStake').textContent = stake.toLocaleString('id-ID', { minimumFractionDigits: 2 });
+    document.getElementById('resOdds').textContent = odds.toFixed(2);
+    document.getElementById('resWinLose').textContent = "+" + winLose.toLocaleString('id-ID', { minimumFractionDigits: 2 });
+
+    // Tampilkan bagian hasil
+    document.getElementById('resultSection').style.display = 'block';
+}
+</script>
 
 </body>
 </html>
