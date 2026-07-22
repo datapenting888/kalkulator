@@ -20,7 +20,7 @@ th { background-color: #f8f9fa; white-space: nowrap; }
 .lose { color: #dc3545; font-weight: bold; }
 #result-section { display: none; margin-top: 30px; }
 .explanation-box { margin-top: 15px; }
-.explanation-box textarea { background-color: #fdfdfe; color: #333; }
+.explanation-box textarea { background-color: #fdfdfe; color: #333; height: 160px; }
 </style>
 </head>
 <body>
@@ -92,6 +92,15 @@ function formatNumber(num) {
     return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// Cek keyword dengan batas kata (word boundary) supaya "under" di "underdog"
+// atau "win" di "winter" tidak ikut ke-deteksi secara keliru.
+function containsWord(text, words) {
+    return words.some(function(w) {
+        let re = new RegExp('\\b' + w + '\\b', 'i');
+        return re.test(text);
+    });
+}
+
 function hitungBetting(event) {
     event.preventDefault();
 
@@ -99,38 +108,88 @@ function hitungBetting(event) {
     let stake = parseFloat(document.getElementById('stake').value);
     let odds = parseFloat(document.getElementById('odds').value);
 
+    if (isNaN(stake) || stake <= 0) {
+        alert("Stake harus berupa angka lebih besar dari 0.");
+        return;
+    }
+    if (isNaN(odds) || odds === 0) {
+        alert("Odds harus diisi dengan angka dan tidak boleh 0.");
+        return;
+    }
+
     let actualStake = stake;
     let winLose = 0;
     let totalKemenangan = 0;
-    let status = "lose"; 
+    let status = "lose";
     let explanationText = "";
 
-    let detailsLower = details.toLowerCase();
+    // --- 1. Deteksi status Menang/Kalah dari kata kunci pada Details ---
+    let winWords  = ["won", "win", "menang", "unggul"];
+    let loseWords = ["lose", "lost", "kalah"];
+    // "over"/"under" dan "away" dihapus dari daftar karena tidak selalu berarti
+    // menang/kalah (tergantung jenis taruhan), sehingga dulu sering salah deteksi.
 
-    // Logika Deteksi Otomatis Berdasarkan Keyword pada Details
-    if (detailsLower.includes("won") || detailsLower.includes("win") || detailsLower.includes("away") || detailsLower.includes("over")) {
+    let isWin  = containsWord(details, winWords);
+    let isLose = containsWord(details, loseWords);
+
+    if (isWin && !isLose) {
         status = "won";
-        explanationText = "Taruhan dinyatakan MENANG (WON) berdasarkan deteksi kata kunci pada detail pertandingan (terdapat indikasi kemenangan/target tercapai).";
-    } else if (detailsLower.includes("lose") || detailsLower.includes("lost") || detailsLower.includes("under")) {
+        explanationText = "Status MENANG terdeteksi dari kata kunci kemenangan pada Details.\n\n";
+    } else if (isLose && !isWin) {
         status = "lose";
-        explanationText = "Taruhan dinyatakan KALAH (LOSE) berdasarkan deteksi kata kunci pada detail pertandingan.";
+        explanationText = "Status KALAH terdeteksi dari kata kunci kekalahan pada Details.\n\n";
+    } else if (isWin && isLose) {
+        // Ambigu: ada kata kunci menang & kalah sekaligus, default aman ke KALAH
+        status = "lose";
+        explanationText = "Details mengandung kata kunci menang dan kalah sekaligus (ambigu). " +
+            "Status di-default-kan ke KALAH untuk keamanan perhitungan. Mohon periksa detail atau ubah status manual jika perlu.\n\n";
     } else {
         status = "lose";
-        explanationText = "Taruhan secara default diset KALAH (LOSE) karena tidak ditemukan indikasi kata kunci kemenangan yang spesifik.";
+        explanationText = "Tidak ditemukan kata kunci menang/kalah yang jelas pada Details, status di-default-kan ke KALAH.\n\n";
     }
 
-    // Perhitungan Nominal Berdasarkan Status
+    // --- 2. Deteksi format Odds secara otomatis ---
+    // Odds Decimal selalu > 1 dan bertanda positif (contoh: 1.85, 2.40).
+    // Odds American selalu bernilai mutlak >= 100 (contoh: -110, +150).
+    // Karena kedua rentang ini tidak pernah tumpang tindih, deteksi otomatis aman dilakukan.
+    let isAmerican = Math.abs(odds) >= 100;
+
     if (status === 'won') {
-        if (odds < 0) {
-            winLose = stake * Math.abs(odds);
+        if (isAmerican) {
+            if (odds > 0) {
+                winLose = stake * (odds / 100);
+                explanationText += "Odds " + (odds > 0 ? '+' : '') + formatNumber(odds) +
+                    " terdeteksi sebagai American (positif).\n" +
+                    "Rumus: Keuntungan = Stake x (Odds / 100)\n" +
+                    formatNumber(stake) + " x (" + formatNumber(odds) + " / 100) = " + formatNumber(winLose);
+            } else {
+                winLose = stake * (100 / Math.abs(odds));
+                explanationText += "Odds " + formatNumber(odds) + " terdeteksi sebagai American (negatif).\n" +
+                    "Rumus: Keuntungan = Stake x (100 / |Odds|)\n" +
+                    formatNumber(stake) + " x (100 / " + formatNumber(Math.abs(odds)) + ") = " + formatNumber(winLose);
+            }
             totalKemenangan = stake + winLose;
+            explanationText += "\n\nTotal Kemenangan = Stake + Keuntungan = " +
+                formatNumber(stake) + " + " + formatNumber(winLose) + " = " + formatNumber(totalKemenangan);
         } else {
+            if (odds <= 1) {
+                alert("Odds decimal harus lebih besar dari 1 (contoh: 1.85). Jika ini odds American, gunakan nilai >= 100 atau <= -100.");
+                return;
+            }
             winLose = stake * (odds - 1);
             totalKemenangan = stake * odds;
+            explanationText += "Odds " + formatNumber(odds) + " terdeteksi sebagai Decimal.\n" +
+                "Rumus: Total Kemenangan = Stake x Odds\n" +
+                formatNumber(stake) + " x " + formatNumber(odds) + " = " + formatNumber(totalKemenangan) + "\n\n" +
+                "Keuntungan = Total Kemenangan - Stake = " +
+                formatNumber(totalKemenangan) + " - " + formatNumber(stake) + " = " + formatNumber(winLose);
         }
     } else {
         winLose = -stake;
         totalKemenangan = 0;
+        explanationText += "Karena taruhan kalah, seluruh Stake hilang.\n" +
+            "Win/Lose = -Stake = -" + formatNumber(stake) + "\n" +
+            "Total Kemenangan = 0";
     }
 
     // Menampilkan hasil ke dalam tabel & kotak penjelasan
@@ -138,8 +197,8 @@ function hitungBetting(event) {
     document.getElementById('res-total-kemenangan').textContent = formatNumber(totalKemenangan);
     document.getElementById('res-actual-stake').textContent = formatNumber(actualStake);
     document.getElementById('res-stake').textContent = formatNumber(stake);
-    document.getElementById('res-odds').textContent = formatNumber(odds);
-    
+    document.getElementById('res-odds').textContent = (odds > 0 ? '+' : '') + formatNumber(odds);
+
     let statusElem = document.getElementById('res-status');
     statusElem.textContent = status.toUpperCase();
     statusElem.className = status === 'won' ? 'win' : 'lose';
