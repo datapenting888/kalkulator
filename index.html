@@ -316,6 +316,78 @@
     .panel{ padding:14px 12px 20px; margin:8px; }
     .tab-btn{ padding:8px 10px; font-size:11px; }
   }
+
+  /* ---------------- Prediksi page ---------------- */
+  .pred-columns{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .pred-col{
+    flex:1 1 360px;
+    min-width:280px;
+  }
+  .pred-card{
+    background: var(--bg-card);
+    border-radius:8px;
+    padding:18px;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .pred-label{
+    display:block;
+    text-align:center;
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:0.5px;
+    color:#fff;
+    text-transform:uppercase;
+    margin-bottom:12px;
+  }
+  .pred-select{
+    width:100%;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid var(--border-soft);
+    background: var(--input-bg);
+    color:#1f2937;
+    font-weight:700;
+    font-size:14px;
+    margin-bottom:12px;
+  }
+  .pred-btn{
+    width:100%;
+    border:none;
+    padding:11px;
+    border-radius:6px;
+    font-weight:800;
+    font-size:13.5px;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    background: var(--pink);
+    color:#fff;
+    transition: background .2s ease;
+  }
+  .pred-btn:hover{ background: var(--pink-dark); }
+  .pred-btn.copied{ background:#28a745; }
+  .pred-box{
+    margin-top:14px;
+    background: rgba(0,0,0,0.25);
+    border:1px dashed rgba(255,255,255,0.3);
+    border-radius:6px;
+    padding:14px;
+    white-space:pre-wrap;
+    font-size:12.5px;
+    line-height:1.55;
+    min-height:280px;
+    max-height:520px;
+    overflow-y:auto;
+    font-family:'Consolas', monospace;
+  }
+  .pred-box::-webkit-scrollbar{ width:6px; }
+  .pred-box::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.2); border-radius:3px; }
+  @media (max-width:760px){
+    .pred-columns{ flex-direction:column; }
+  }
 </style>
 </head>
 <body>
@@ -324,7 +396,15 @@
   <div class="brand"><span class="smb">SMB</span> <span class="group">GROUP</span></div>
   <hr class="brand-divider">
   <div class="menu-caption">MENU DASBOARD</div>
-  <div class="nav-item active" id="navPng">
+  <div class="nav-item active" id="navPrediksi">
+    <span class="icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M4 19V13M9 19V9M14 19V5M19 19V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+    <span class="label">PREDIKSI</span>
+  </div>
+  <div class="nav-item" id="navPng">
     <span class="icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
         <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/>
@@ -348,7 +428,34 @@
 
 <div class="main-content">
 
-<div id="pagePng">
+<div id="pagePrediksi">
+<div class="topbar">
+  <h1>DASHBOARD PREDIKSI TOGEL</h1>
+</div>
+
+<div class="panel">
+  <div class="pred-columns">
+    <div class="pred-col">
+      <div class="pred-card">
+        <label class="pred-label">Pasaran Hari Ini</label>
+        <select class="pred-select" id="selHariIni"></select>
+        <button type="button" class="pred-btn" id="btnSalinHariIni">SALIN PREDIKSI</button>
+        <div class="pred-box" id="boxHariIni"></div>
+      </div>
+    </div>
+    <div class="pred-col">
+      <div class="pred-card">
+        <label class="pred-label">Pasaran Besok</label>
+        <select class="pred-select" id="selBesok"></select>
+        <button type="button" class="pred-btn" id="btnSalinBesok">SALIN PREDIKSI</button>
+        <div class="pred-box" id="boxBesok"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="pagePng" style="display:none;">
 <div class="topbar">
   <h1>PERHITUNGAN HADIAH TOGEL</h1>
 </div>
@@ -956,6 +1063,280 @@
     IDN_MARKETS[name] = { categories: IDN_US_CATEGORIES };
   });
 
+  // Perhitungan Togel IDN: CHELSEA, POIPET, BRUNEI, BANGKOK, HUA HIN, NEVADA,
+  // MAGNUM4D, SINGAPORE rates per reference screenshots. Same Diskon, Prize,
+  // Tepat & BB, and Lainnya as Hongkong/Sydney's IDN table, but Bet Full is
+  // x10000/x1000/x100 (same multipliers as the US-style markets).
+  var IDN_CHELSEA_GROUP_CATEGORIES = {
+    diskon: IDN_HK_SYD_CATEGORIES.diskon,
+    betfull: IDN_US_CATEGORIES.betfull,
+    prize: IDN_HK_SYD_CATEGORIES.prize,
+    tepatbb: IDN_HK_SYD_CATEGORIES.tepatbb,
+    lainnya: IDN_HK_SYD_CATEGORIES.lainnya
+  };
+  ["CHELSEA","POIPET","BRUNEI","BANGKOK","HUA HIN",
+   "NEVADA","MAGNUM4D","SINGAPORE","TOTO CAMBODIA"].forEach(function(name){
+    IDN_MARKETS[name] = { categories: IDN_CHELSEA_GROUP_CATEGORIES };
+  });
+
+  // Perhitungan Togel IDN: KINGKONG rates per reference screenshots. No
+  // Prize category for this market. Diskon has only 3 items (4D/3D/2D, no
+  // Depan/Tengah). Bet Full is x9000/x950/x95. Lainnya keeps the same
+  // 19-item list/order as Hongkong's IDN table but with 0% diskon on every
+  // item and its own set of hadiah/kei values.
+  var IDN_KINGKONG_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:33, mode:"hadiah", value:6000 },
+        { name:"DISKON 3D", diskon:24, mode:"hadiah", value:700 },
+        { name:"DISKON 2D", diskon:15, mode:"hadiah", value:80 }
+      ]
+    },
+    betfull: {
+      label: "Bet Full",
+      items: [
+        { name:"BET FULL 4D", diskon:0, mode:"hadiah", value:9000 },
+        { name:"BET FULL 3D", diskon:0, mode:"hadiah", value:950 },
+        { name:"BET FULL 2D", diskon:0, mode:"hadiah", value:95 }
+      ]
+    },
+    tepatbb: IDN_HK_SYD_CATEGORIES.tepatbb,
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:0, mode:"hadiah", value:1.6 },
+        { name:"COLOK BEBAS ( 2 )", diskon:0, mode:"hadiah", value:3.2 },
+        { name:"COLOK BEBAS ( 3 )", diskon:0, mode:"hadiah", value:4.8 },
+        { name:"COLOK BEBAS ( 4 )", diskon:0, mode:"hadiah", value:6.4 },
+        { name:"COLOK BEBAS 2D ( 2 )", diskon:0, mode:"hadiah", value:7 },
+        { name:"COLOK BEBAS 2D ( 3 )", diskon:0, mode:"hadiah", value:13 },
+        { name:"COLOK BEBAS 2D ( 4 )", diskon:0, mode:"hadiah", value:21 },
+        { name:"COLOK JITU", diskon:0, mode:"hadiah", value:8.3 },
+        { name:"MACAU SHIO", diskon:0, mode:"hadiah", value:110 },
+        { name:"COLOK NAGA ( 3 )", diskon:0, mode:"hadiah", value:27 },
+        { name:"COLOK NAGA ( 4 )", diskon:0, mode:"hadiah", value:41 },
+        { name:"SHIO", diskon:0, mode:"hadiah", value:10 },
+        { name:"50 - 50", diskon:0, mode:"kei", value:-5 },
+        { name:"KOMBINASI", diskon:0, mode:"hadiah", value:2.8 },
+        { name:"SILANG HOMO", diskon:0, mode:"kei", value:-2.2 },
+        { name:"TENGAH TEPI", diskon:0, mode:"kei", value:-2.2 },
+        { name:"KEMBANG - KEMPIS - KEMBAR", diskon:0, mode:"kei", value:-2.2 },
+        { name:"DASAR GANJIL - BESAR", diskon:0, mode:"kei", value:-25 },
+        { name:"DASAR GENAP - KECIL", diskon:0, mode:"kei", value:10 }
+      ]
+    }
+  };
+  IDN_MARKETS["KINGKONG"] = { categories: IDN_KINGKONG_CATEGORIES };
+
+  // Perhitungan Togel IDN: TOTOMALI rates per reference screenshots. Diskon
+  // has only 3 items (4D/3D/2D, no Depan/Tengah) with its own rates. Bet
+  // Full is x10000/x1000/x100. Prize and Tepat & BB match Hongkong/Sydney's
+  // IDN table. Lainnya keeps Hongkong's diskon % per item but with its own
+  // hadiah/kei values (matching Kingkong's Lainnya numbers).
+  var IDN_TOTOMALI_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:67, mode:"hadiah", value:3000 },
+        { name:"DISKON 3D", diskon:57, mode:"hadiah", value:400 },
+        { name:"DISKON 2D", diskon:27, mode:"hadiah", value:70 }
+      ]
+    },
+    betfull: IDN_US_CATEGORIES.betfull,
+    prize: IDN_HK_SYD_CATEGORIES.prize,
+    tepatbb: IDN_HK_SYD_CATEGORIES.tepatbb,
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:6, mode:"hadiah", value:1.6 },
+        { name:"COLOK BEBAS ( 2 )", diskon:6, mode:"hadiah", value:3.2 },
+        { name:"COLOK BEBAS ( 3 )", diskon:6, mode:"hadiah", value:4.8 },
+        { name:"COLOK BEBAS ( 4 )", diskon:6, mode:"hadiah", value:6.4 },
+        { name:"COLOK BEBAS 2D ( 2 )", diskon:10, mode:"hadiah", value:7 },
+        { name:"COLOK BEBAS 2D ( 3 )", diskon:10, mode:"hadiah", value:13 },
+        { name:"COLOK BEBAS 2D ( 4 )", diskon:10, mode:"hadiah", value:21 },
+        { name:"COLOK JITU", diskon:6, mode:"hadiah", value:8.3 },
+        { name:"MACAU SHIO", diskon:10, mode:"hadiah", value:110 },
+        { name:"COLOK NAGA ( 3 )", diskon:10, mode:"hadiah", value:27 },
+        { name:"COLOK NAGA ( 4 )", diskon:10, mode:"hadiah", value:41 },
+        { name:"SHIO", diskon:5, mode:"hadiah", value:9.5 },
+        { name:"50 - 50", diskon:2, mode:"kei", value:-5 },
+        { name:"TENGAH TEPI", diskon:2, mode:"kei", value:-2.2 },
+        { name:"SILANG HOMO", diskon:2, mode:"kei", value:-2.2 },
+        { name:"KEMBANG - KEMPIS - KEMBAR", diskon:2, mode:"kei", value:-2.2 },
+        { name:"KOMBINASI", diskon:8, mode:"hadiah", value:2.8 },
+        { name:"DASAR GANJIL - BESAR", diskon:2, mode:"kei", value:-25 },
+        { name:"DASAR GENAP - KECIL", diskon:2, mode:"kei", value:10 }
+      ]
+    }
+  };
+  IDN_MARKETS["TOTOMALI"] = { categories: IDN_TOTOMALI_CATEGORIES };
+
+  // Perhitungan Togel IDN: JAKARTA rates per reference screenshots. No
+  // Prize category for this market. Diskon has only 3 items (4D/3D/2D, no
+  // Depan/Tengah) matching Hongkong/Sydney's first 3 Diskon rates. Bet Full
+  // is x10000/x1000/x100, Tepat & BB matches Hongkong/Sydney, and Lainnya
+  // matches Totomali's Lainnya list exactly.
+  var IDN_JAKARTA_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:66.5, mode:"hadiah", value:3000 },
+        { name:"DISKON 3D", diskon:59.5, mode:"hadiah", value:400 },
+        { name:"DISKON 2D", diskon:29.5, mode:"hadiah", value:70 }
+      ]
+    },
+    betfull: IDN_US_CATEGORIES.betfull,
+    tepatbb: IDN_HK_SYD_CATEGORIES.tepatbb,
+    lainnya: IDN_TOTOMALI_CATEGORIES.lainnya
+  };
+  IDN_MARKETS["JAKARTA"] = { categories: IDN_JAKARTA_CATEGORIES };
+
+  // Perhitungan Togel IDN: HOKI DRAW rates per reference screenshots. No
+  // Prize category for this market. Diskon is a flat 20% across 4D/3D/2D
+  // with its own hadiah values. Bet Full is x10000/x1000/x100. Tepat & BB
+  // and Lainnya both use their own unique hadiah/kei values for this market.
+  var IDN_HOKIDRAW_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:20, mode:"hadiah", value:7000 },
+        { name:"DISKON 3D", diskon:20, mode:"hadiah", value:750 },
+        { name:"DISKON 2D", diskon:20, mode:"hadiah", value:75 }
+      ]
+    },
+    betfull: IDN_US_CATEGORIES.betfull,
+    tepatbb: {
+      label: "Tepat & BB",
+      items: [
+        { name:"4D TEPAT", diskon:0, mode:"hadiah", value:5000 },
+        { name:"4D BB", diskon:0, mode:"hadiah", value:180 },
+        { name:"3D TEPAT", diskon:0, mode:"hadiah", value:500 },
+        { name:"3D BB", diskon:0, mode:"hadiah", value:75 },
+        { name:"2D TEPAT", diskon:0, mode:"hadiah", value:80 },
+        { name:"2D BB", diskon:0, mode:"hadiah", value:15 }
+      ]
+    },
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:6, mode:"hadiah", value:0.9 },
+        { name:"COLOK BEBAS ( 2 )", diskon:6, mode:"hadiah", value:1.8 },
+        { name:"COLOK BEBAS ( 3 )", diskon:6, mode:"hadiah", value:2.7 },
+        { name:"COLOK BEBAS ( 4 )", diskon:6, mode:"hadiah", value:3.6 },
+        { name:"COLOK BEBAS 2D ( 2 )", diskon:10, mode:"hadiah", value:4 },
+        { name:"COLOK BEBAS 2D ( 3 )", diskon:10, mode:"hadiah", value:6 },
+        { name:"COLOK BEBAS 2D ( 4 )", diskon:10, mode:"hadiah", value:20 },
+        { name:"COLOK JITU", diskon:6, mode:"hadiah", value:8 },
+        { name:"MACAU SHIO", diskon:10, mode:"hadiah", value:110 },
+        { name:"COLOK NAGA ( 3 )", diskon:10, mode:"hadiah", value:12 },
+        { name:"COLOK NAGA ( 4 )", diskon:10, mode:"hadiah", value:30 },
+        { name:"SHIO", diskon:5, mode:"hadiah", value:9.5 },
+        { name:"50 - 50", diskon:2, mode:"kei", value:-2.2 },
+        { name:"TENGAH TEPI", diskon:2, mode:"kei", value:-2.2 },
+        { name:"SILANG HOMO", diskon:2, mode:"kei", value:-3 },
+        { name:"KEMBANG - KEMPIS - KEMBAR", diskon:2, mode:"kei", value:-3 },
+        { name:"KOMBINASI", diskon:8, mode:"hadiah", value:2.7 },
+        { name:"DASAR GANJIL - BESAR", diskon:2, mode:"kei", value:-25 },
+        { name:"DASAR GENAP - KECIL", diskon:2, mode:"kei", value:10 }
+      ]
+    }
+  };
+  IDN_MARKETS["HOKI DRAW"] = { categories: IDN_HOKIDRAW_CATEGORIES };
+
+  // Perhitungan Togel IDN: TOTO MACAU 4D rates per reference screenshots.
+  // No Prize category. Diskon has 6 items: the normal Diskon 4D/3D/2D plus
+  // a Super Diskon 4D/3D/2D set. Bet Full and Lainnya match Kingkong's IDN
+  // rates exactly; Tepat & BB matches Hongkong/Sydney's rates.
+  var IDN_TOTOMACAU4D_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 4D", diskon:33, mode:"hadiah", value:6000 },
+        { name:"DISKON 3D", diskon:24, mode:"hadiah", value:700 },
+        { name:"DISKON 2D", diskon:15, mode:"hadiah", value:80 },
+        { name:"SUPER DISKON 4D", diskon:66, mode:"hadiah", value:3000 },
+        { name:"SUPER DISKON 3D", diskon:59, mode:"hadiah", value:400 },
+        { name:"SUPER DISKON 2D", diskon:29, mode:"hadiah", value:70 }
+      ]
+    },
+    betfull: IDN_KINGKONG_CATEGORIES.betfull,
+    tepatbb: IDN_HK_SYD_CATEGORIES.tepatbb,
+    lainnya: IDN_KINGKONG_CATEGORIES.lainnya
+  };
+  IDN_MARKETS["TOTO MACAU 4D"] = { categories: IDN_TOTOMACAU4D_CATEGORIES };
+
+  // Perhitungan Togel IDN: TOTO MACAU 5D rates per reference screenshots.
+  // No Prize category. This market has its own unique 5D-based Diskon/Bet
+  // Full/Tepat & BB rates, and a distinct Lainnya list with 5D/4D Colok
+  // Bebas and Colok Naga variants (no Macau Shio, Silang Homo, or
+  // Kembang-Kempis-Kembar entries here).
+  var IDN_TOTOMACAU5D_CATEGORIES = {
+    diskon: {
+      label: "Diskon",
+      items: [
+        { name:"DISKON 5D", diskon:38, mode:"hadiah", value:50000 },
+        { name:"DISKON 4D", diskon:20, mode:"hadiah", value:7000 },
+        { name:"DISKON 3D", diskon:20, mode:"hadiah", value:750 },
+        { name:"DISKON 2D", diskon:20, mode:"hadiah", value:75 }
+      ]
+    },
+    betfull: {
+      label: "Bet Full",
+      items: [
+        { name:"BET FULL 5D", diskon:0, mode:"hadiah", value:88000 },
+        { name:"BET FULL 4D", diskon:0, mode:"hadiah", value:9000 },
+        { name:"BET FULL 3D", diskon:0, mode:"hadiah", value:950 },
+        { name:"BET FULL 2D", diskon:0, mode:"hadiah", value:95 }
+      ]
+    },
+    tepatbb: {
+      label: "Tepat & BB",
+      items: [
+        { name:"5D TEPAT", diskon:0, mode:"hadiah", value:50000 },
+        { name:"5D BB", diskon:0, mode:"hadiah", value:350 },
+        { name:"4D TEPAT", diskon:0, mode:"hadiah", value:5000 },
+        { name:"4D BB", diskon:0, mode:"hadiah", value:180 },
+        { name:"3D TEPAT", diskon:0, mode:"hadiah", value:500 },
+        { name:"3D BB", diskon:0, mode:"hadiah", value:75 },
+        { name:"2D TEPAT", diskon:0, mode:"hadiah", value:80 },
+        { name:"2D BB", diskon:0, mode:"hadiah", value:15 }
+      ]
+    },
+    lainnya: {
+      label: "Lainnya",
+      showTotal: true,
+      items: [
+        { name:"COLOK BEBAS", diskon:0, mode:"hadiah", value:0.9 },
+        { name:"COLOK BEBAS ( 2 )", diskon:0, mode:"hadiah", value:1.8 },
+        { name:"COLOK BEBAS ( 3 )", diskon:0, mode:"hadiah", value:2.7 },
+        { name:"COLOK BEBAS ( 4 )", diskon:0, mode:"hadiah", value:3.6 },
+        { name:"COLOK BEBAS ( 5 )", diskon:0, mode:"hadiah", value:4.5 },
+        { name:"COLOK BEBAS 2D ( 2 )", diskon:0, mode:"hadiah", value:4 },
+        { name:"COLOK BEBAS 2D ( 3 )", diskon:0, mode:"hadiah", value:6 },
+        { name:"COLOK BEBAS 2D ( 4 )", diskon:0, mode:"hadiah", value:20 },
+        { name:"COLOK BEBAS 2D ( 5 )", diskon:0, mode:"hadiah", value:200 },
+        { name:"COLOK BEBAS 4D ( 4 )", diskon:0, mode:"hadiah", value:50 },
+        { name:"COLOK BEBAS 4D ( 5 )", diskon:0, mode:"hadiah", value:200 },
+        { name:"COLOK JITU", diskon:0, mode:"hadiah", value:8 },
+        { name:"COLOK NAGA ( 3 )", diskon:0, mode:"hadiah", value:12 },
+        { name:"COLOK NAGA ( 4 )", diskon:0, mode:"hadiah", value:30 },
+        { name:"COLOK NAGA ( 5 )", diskon:0, mode:"hadiah", value:125 },
+        { name:"SHIO", diskon:0, mode:"hadiah", value:10 },
+        { name:"50 - 50", diskon:0, mode:"kei", value:-2.2 },
+        { name:"KOMBINASI", diskon:0, mode:"hadiah", value:2.7 },
+        { name:"TENGAH TEPI", diskon:0, mode:"kei", value:-2.2 },
+        { name:"DASAR GANJIL - BESAR", diskon:0, mode:"kei", value:-25 },
+        { name:"DASAR GENAP - KECIL", diskon:0, mode:"kei", value:10 }
+      ]
+    }
+  };
+  IDN_MARKETS["TOTO MACAU 5D"] = { categories: IDN_TOTOMACAU5D_CATEGORIES };
+
   // ---------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------
@@ -1221,36 +1602,183 @@
   }
 
   // ---------------------------------------------------------------------
+  // Prediksi Togel (Menu PREDIKSI)
+  // ---------------------------------------------------------------------
+  var LIST_PASARAN = [
+    "HOKIDRAW", "TOTOMACAU PAGI", "HUAHIN 0100", "KENTUCKYMID", "FLORIDAMID", "BANGKOK 0130",
+    "NEWYORKMID", "BRUNEI 02", "CAROLINADAY", "OREGON03", "OREGON06", "CALIFORNIA",
+    "BANGKOK 0930", "FLORIDAEVE", "OREGON09", "NEWYORKEVE", "KENTUCKYEVE", "TOTOCAMBODIA",
+    "CHELSEA 11", "CAROLINAEVE", "POIPET12", "BULLSEYE", "OREGON12", "TOTOMACAU SIANG",
+    "SYDNEY", "JAKARTA 1400", "BRUNEI 14", "CHELSEA 15", "TOTOMALI 1530", "TOTOMACAU 5D SORE",
+    "POIPET15", "TOTOMACAU SORE", "HUAHIN 1630", "SINGAPORE", "MAGNUM4D", "TOTOMACAU MALAM I",
+    "CHELSEA 19", "POIPET19", "PCSO", "TOTOMALI 2030", "HUAHIN 2100", "CHELSEA 21",
+    "TOTOMACAU 5D MALAM", "NEVADA", "BRUNEI 21", "TOTOMACAU MALAM II", "POIPET22",
+    "HONGKONG", "TOTOMACAU MALAM III", "TOTOMALI 2330", "JAKARTA 2330", "KING KONG4D"
+  ];
+
+  function generatePrediksiData(nama, offset){
+    var d = new Date();
+    d.setDate(d.getDate() + offset);
+
+    var tgl = d.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+
+    var seed = 0;
+    for(var i = 0; i < nama.length; i++){
+      seed = ((seed << 5) - seed) + nama.charCodeAt(i);
+      seed |= 0;
+    }
+    seed += d.getDate() + (d.getMonth() * 100) + (d.getFullYear() * 10000);
+
+    var rng = function(){
+      seed = (1664525 * seed + 1013904223) % 4294967296;
+      return Math.abs(seed / 4294967296);
+    };
+
+    var getUnikDigit = function(jml){
+      var pools = [0,1,2,3,4,5,6,7,8,9];
+      var hasil = [];
+      for(var k = 0; k < jml; k++){
+        var idx = Math.floor(rng() * pools.length);
+        hasil.push(pools.splice(idx, 1)[0]);
+      }
+      return hasil;
+    };
+
+    var getKombinasi = function(jml, digit, separator){
+      separator = separator || " ";
+      var resArr = [];
+      while(resArr.length < jml){
+        var num = "";
+        for(var d2 = 0; d2 < digit; d2++){ num += Math.floor(rng() * 10); }
+        if(resArr.indexOf(num) === -1) resArr.push(num);
+      }
+      return resArr.join(separator);
+    };
+
+    var bbfsArr = getUnikDigit(7);
+    var bbfs = bbfsArr.join('');
+    var amArr = getUnikDigit(5);
+    var am = amArr.join('');
+    var shios = ["KERBAU","NAGA","AYAM","HARIMAU","KUDA","ULAR","TIKUS","BABI","KAMBING","MONYET","ANJING","KELINCI"];
+
+    var res = nama + "\n" + tgl + "\n";
+    res += "BBFS " + bbfs + "\n";
+    res += "ANGKA MAIN " + am + "\n";
+    res += "4D " + getKombinasi(4, 4) + "\n";
+    res += "3D " + getKombinasi(4, 3) + "\n";
+    res += "2D (BB) " + getKombinasi(8, 2) + "\n";
+    res += "Colok Bebas " + amArr[0] + " / " + amArr[1] + "\n";
+
+    var colok2D = [
+      "" + amArr[0] + amArr[2],
+      "" + amArr[1] + amArr[3],
+      "" + amArr[4] + amArr[0],
+      "" + amArr[2] + amArr[4]
+    ];
+    res += "COLOK BEBAS 2D " + colok2D.join(" / ") + "\n";
+
+    var shioPick = [];
+    while(shioPick.length < 3){
+      var s = shios[Math.floor(rng() * shios.length)];
+      if(shioPick.indexOf(s) === -1) shioPick.push(s);
+    }
+    res += "COLOK SHIO " + shioPick.join(' / ') + "\n";
+
+    var tw1 = bbfsArr[0], tw2 = bbfsArr[1], tw3 = bbfsArr[2];
+    res += "TWIN " + tw1 + tw1 + " " + tw2 + tw2 + " " + tw3 + tw3 + "\n";
+    res += "Selalu Utamakan Prediksi Sendiri\n\n";
+
+    return res;
+  }
+
+  function updateTampilanPrediksi(tipe){
+    var sel = document.getElementById("sel" + tipe);
+    var box = document.getElementById("box" + tipe);
+    var offset = (tipe === "HariIni") ? 0 : 1;
+
+    if(sel.value === "SEMUA"){
+      box.textContent = LIST_PASARAN.map(function(p){ return generatePrediksiData(p, offset); }).join('');
+    } else {
+      box.textContent = generatePrediksiData(sel.value, offset);
+    }
+  }
+
+  function salinPrediksi(boxId, btnId){
+    var teks = document.getElementById(boxId).textContent;
+    navigator.clipboard.writeText(teks).then(function(){
+      var btn = document.getElementById(btnId);
+      var originalText = btn.textContent;
+      btn.textContent = "BERHASIL DISALIN";
+      btn.classList.add("copied");
+      setTimeout(function(){
+        btn.textContent = originalText;
+        btn.classList.remove("copied");
+      }, 1500);
+    });
+  }
+
+  function initPrediksi(){
+    var s1 = document.getElementById("selHariIni");
+    var s2 = document.getElementById("selBesok");
+
+    [s1, s2].forEach(function(sel){
+      sel.add(new Option("-- SEMUA PASARAN --", "SEMUA"));
+      LIST_PASARAN.forEach(function(p){ sel.add(new Option(p, p)); });
+    });
+
+    s1.addEventListener("change", function(){ updateTampilanPrediksi("HariIni"); });
+    s2.addEventListener("change", function(){ updateTampilanPrediksi("Besok"); });
+
+    document.getElementById("btnSalinHariIni").addEventListener("click", function(){
+      salinPrediksi("boxHariIni", "btnSalinHariIni");
+    });
+    document.getElementById("btnSalinBesok").addEventListener("click", function(){
+      salinPrediksi("boxBesok", "btnSalinBesok");
+    });
+
+    updateTampilanPrediksi("HariIni");
+    updateTampilanPrediksi("Besok");
+  }
+
+  // ---------------------------------------------------------------------
   // Sidebar navigation (Menu Dasboard)
   // ---------------------------------------------------------------------
   function initSidebarNav(){
-    var navPng = document.getElementById("navPng");
-    var navIdn = document.getElementById("navIdn");
-    var pagePng = document.getElementById("pagePng");
-    var pageIdn = document.getElementById("pageIdn");
+    var navs = {
+      prediksi: document.getElementById("navPrediksi"),
+      png: document.getElementById("navPng"),
+      idn: document.getElementById("navIdn")
+    };
+    var pages = {
+      prediksi: document.getElementById("pagePrediksi"),
+      png: document.getElementById("pagePng"),
+      idn: document.getElementById("pageIdn")
+    };
 
     function showPage(page){
-      if(page === "png"){
-        pagePng.style.display = "";
-        pageIdn.style.display = "none";
-        navPng.classList.add("active");
-        navIdn.classList.remove("active");
-      } else {
-        pagePng.style.display = "none";
-        pageIdn.style.display = "";
-        navIdn.classList.add("active");
-        navPng.classList.remove("active");
-      }
+      Object.keys(pages).forEach(function(key){
+        pages[key].style.display = (key === page) ? "" : "none";
+        navs[key].classList[key === page ? "add" : "remove"]("active");
+      });
     }
 
-    navPng.addEventListener("click", function(){ showPage("png"); });
-    navIdn.addEventListener("click", function(){ showPage("idn"); });
+    navs.prediksi.addEventListener("click", function(){ showPage("prediksi"); });
+    navs.png.addEventListener("click", function(){ showPage("png"); });
+    navs.idn.addEventListener("click", function(){ showPage("idn"); });
+
+    showPage("prediksi");
   }
 
   // ---------------------------------------------------------------------
   // init
   // ---------------------------------------------------------------------
   initSidebarNav();
+  initPrediksi();
 
   var pngCalculator = createCalculator({
     toggleId: "marketToggle",
