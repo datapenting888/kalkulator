@@ -2,15 +2,15 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Kalkulator Betting Otomatis</title>
+    <title>Dashboard Kalkulator Betting Manual</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 950px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        textarea { height: 120px; }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        textarea { height: 100px; }
         button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
         button:hover { background: #0056b3; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -23,29 +23,38 @@
 <body>
 
 <div class="container">
-    <h2>Dashboard Kalkulator Betting Otomatis</h2>
+    <h2>Dashboard Input & Kalkulator Betting Manual (HTML/JS)</h2>
     
     <!-- Form Input Data -->
     <form id="betForm" onsubmit="hitungBetting(event)">
+        <div class="form-group">
+            <label>Username:</label>
+            <input type="text" id="username" value="TIDfAVdR8toOMG3ns" required>
+        </div>
         
         <div class="form-group">
-            <label>Details Pertandingan (Tempel teks lengkap di sini):</label>
+            <label>Details Pertandingan:</label>
             <textarea id="details" required>Soccer
-France vs England
+England vs Argentina
 *WORLD CUP 2026 (IN CANADA, MEXICO & USA)
-Type: Indonesia
-Bet: Over/Under over 5.5 @-2.18
-Live Score: 0:4
-Half time result: 0:4
-Full time result: 4:6</textarea>
+Type: Europe
+Bet: FT.1X2 away 0 @3.15
+Live Score: 0:0
+Half time result: 0:0
+Full time result: 1:2</textarea>
         </div>
         
         <div class="form-group">
             <label>Stake (Modal):</label>
-            <input type="number" step="0.01" id="stake" value="36000" required>
+            <input type="number" step="0.01" id="stake" value="50000" required>
         </div>
         
-        <button type="submit">Proses & Hitung Otomatis</button>
+        <div class="form-group">
+            <label>Odds:</label>
+            <input type="number" step="0.01" id="odds" value="3.15" required>
+        </div>
+        
+        <button type="submit">Proses & Hitung</button>
     </form>
 
     <!-- Tabel Hasil Output -->
@@ -54,22 +63,22 @@ Full time result: 4:6</textarea>
         <table>
             <thead>
                 <tr>
+                    <th>Username</th>
                     <th>Details</th>
                     <th>Currency</th>
-                    <th>Actual Stake</th>
                     <th>Stake</th>
-                    <th>Win & Lose</th>
                     <th>Odds</th>
+                    <th>Win & Lose</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
+                    <td id="resUsername"></td>
                     <td><pre id="resDetails"></pre></td>
                     <td>IDR</td>
-                    <td id="resActualStake">0.00</td>
-                    <td id="resStake">0.00</td>
-                    <td id="resWinLose" class="win">0.00</td>
-                    <td id="resOdds">0.00</td>
+                    <td id="resStake"></td>
+                    <td id="resOdds"></td>
+                    <td id="resWinLose" class="win"></td>
                 </tr>
             </tbody>
         </table>
@@ -79,42 +88,25 @@ Full time result: 4:6</textarea>
 
 <script>
 function hitungBetting(event) {
-    event.preventDefault();
+    event.preventDefault(); // Mencegah halaman reload
 
-    // Ambil data dari form
+    // Ambil nilai dari form
+    const username = document.getElementById('username').value;
     const details = document.getElementById('details').value;
-    const stake = parseFloat(document.getElementById('stake').value) || 0;
+    const stake = parseFloat(document.getElementById('stake').value);
+    const odds = parseFloat(document.getElementById('odds').value);
 
-    let odds = 0;
-    let actualStake = stake;
-    let winLose = 0;
+    // Rumus perhitungan Win & Lose (Stake * (Odds - 1))
+    const winLose = stake * (odds - 1);
 
-    // Ekstrak nilai Odds otomatis dari teks (mencari pola "@angka" atau "@-angka")
-    const oddsMatch = details.match(/@\s*(-?\d+(\.\d+)?)/);
-    if (oddsMatch) {
-        odds = parseFloat(oddsMatch[1]);
-    }
-
-    // Logika Perhitungan Berdasarkan Jenis Odds (Positif vs Negatif)
-    if (odds < 0) {
-        // Untuk odds negatif (contoh: -2.18)
-        let absOdds = Math.abs(odds);
-        actualStake = stake * absOdds;
-        winLose = stake; 
-    } else {
-        // Untuk odds positif (contoh: 2.38 atau 3.15)
-        actualStake = stake;
-        winLose = stake * (odds - 1);
-    }
-
-    // Masukkan hasil ke elemen tabel HTML
+    // Masukkan ke dalam tabel HTML
+    document.getElementById('resUsername').textContent = username;
     document.getElementById('resDetails').textContent = details;
-    document.getElementById('resActualStake').textContent = actualStake.toLocaleString('id-ID', { minimumFractionDigits: 2 });
     document.getElementById('resStake').textContent = stake.toLocaleString('id-ID', { minimumFractionDigits: 2 });
-    document.getElementById('resWinLose').textContent = "+" + winLose.toLocaleString('id-ID', { minimumFractionDigits: 2 });
     document.getElementById('resOdds').textContent = odds.toFixed(2);
+    document.getElementById('resWinLose').textContent = "+" + winLose.toLocaleString('id-ID', { minimumFractionDigits: 2 });
 
-    // Tampilkan tabel hasil
+    // Tampilkan bagian hasil
     document.getElementById('resultSection').style.display = 'block';
 }
 </script>
