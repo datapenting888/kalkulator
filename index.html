@@ -46,14 +46,14 @@ Full time result: 4:6</textarea>
         
         <div class="form-group">
             <label>Odds:</label>
-            <input type="number" step="0.01" id="odds" value="120" required>
+            <input type="number" step="0.01" id="odds" value="120.00" required>
         </div>
 
         <div class="form-group">
             <label>Status:</label>
             <select id="status">
-                <option value="won">Won</option>
-                <option value="lost" selected>Lost</option>
+                <option value="won">Won (Menang)</option>
+                <option value="lose" selected>Lose (Kalah)</option>
             </select>
         </div>
         
@@ -115,16 +115,13 @@ function hitungBetting(event) {
             winLose = stake * Math.abs(odds);
             totalKemenangan = stake + winLose;
         } else {
-            // Contoh Odds 120 (Format Indo/Malay atau format khusus odds tinggi)
-            // Jika odds format desimal biasa > 1: stake * (odds - 1)
-            // Sesuaikan jika odds 120 artinya pengalian langsung
-            winLose = stake * odds; 
-            totalKemenangan = stake + winLose;
+            winLose = stake * (odds - 1);
+            totalKemenangan = stake * odds;
         }
     } else {
-        // Jika status Lost (Kalah)
+        // Jika status Lose (Kalah)
         winLose = -stake;
-        totalKemenangan = 0.00;
+        totalKemenangan = 0;
     }
 
     document.getElementById('res-details').textContent = details;
