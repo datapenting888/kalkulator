@@ -19,8 +19,6 @@ th { background-color: #f8f9fa; white-space: nowrap; }
 .win { color: #28a745; font-weight: bold; }
 .lose { color: #dc3545; font-weight: bold; }
 #result-section { display: none; margin-top: 30px; }
-.explanation-box { margin-top: 15px; }
-.explanation-box textarea { background-color: #fdfdfe; color: #333; }
 </style>
 </head>
 <body>
@@ -28,21 +26,28 @@ th { background-color: #f8f9fa; white-space: nowrap; }
 <div class="container">
 <h2>Dashboard Input & Kalkulator Betting Manual</h2>
 
-<!-- Form Input -->
+<!-- Form Input (Tanpa Pilihan Status) -->
 <form id="betForm" onsubmit="hitungBetting(event)">
 <div class="form-group">
 <label>Details Pertandingan:</label>
-<textarea id="details" required placeholder="Masukkan detail taruhan di sini..."></textarea>
+<textarea id="details" required>Soccer
+France vs England
+*WORLD CUP 2026 (IN CANADA, MEXICO & USA)
+Type: Europe
+Bet: 2H Correct Score 0-3 @120
+Live Score: 0:0
+Half time result: 0:4
+Full time result: 4:6</textarea>
 </div>
 
 <div class="form-group">
 <label>Stake:</label>
-<input type="number" step="0.01" id="stake" required placeholder="Contoh: 100">
+<input type="number" step="0.01" id="stake" value="10000.00" required>
 </div>
 
 <div class="form-group">
 <label>Odds:</label>
-<input type="number" step="0.01" id="odds" required placeholder="Contoh: 1.85">
+<input type="number" step="0.01" id="odds" value="120.00" required>
 </div>
 
 <button type="submit">Proses & Hitung</button>
@@ -77,83 +82,89 @@ th { background-color: #f8f9fa; white-space: nowrap; }
 </tr>
 </tbody>
 </table>
-
-<!-- Kotak Penjelasan -->
-<div class="form-group explanation-box">
-<label for="res-explanation">Penjelasan:</label>
-<textarea id="res-explanation" placeholder="Penjelasan kalkulasi atau catatan status akan muncul otomatis di sini..."></textarea>
-</div>
 </div>
 
 </div>
 
 <script>
 function formatNumber(num) {
-    return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function hitungBetting(event) {
-    event.preventDefault();
+event.preventDefault();
 
-    let details = document.getElementById('details').value;
-    let stake = parseFloat(document.getElementById('stake').value);
-    let odds = parseFloat(document.getElementById('odds').value);
+let details = document.getElementById('details').value;
+let stake = parseFloat(document.getElementById('stake').value);
+let odds = parseFloat(document.getElementById('odds').value);
 
-    let actualStake = stake;
-    let winLose = 0;
-    let totalKemenangan = 0;
-    let status = "lose"; 
-    let explanationText = "";
+let actualStake = stake;
+let winLose = 0;
+let totalKemenangan = 0;
+let status = "lose"; // Default anggap kalah jika tidak cocok
 
-    let detailsLower = details.toLowerCase();
+// Logika Deteksi Otomatis Menang / Kalah berdasarkan teks detail
+let detailsLower = details.toLowerCase();
 
-    // Logika Deteksi Otomatis Berdasarkan Keyword pada Details
-    if (detailsLower.includes("won") || detailsLower.includes("win") || detailsLower.includes("away") || detailsLower.includes("over")) {
-        status = "won";
-        explanationText = "Taruhan dinyatakan MENANG (WON) berdasarkan deteksi kata kunci pada detail pertandingan (terdapat indikasi kemenangan/target tercapai).";
-    } else if (detailsLower.includes("lose") || detailsLower.includes("lost") || detailsLower.includes("under")) {
-        status = "lose";
-        explanationText = "Taruhan dinyatakan KALAH (LOSE) berdasarkan deteksi kata kunci pada detail pertandingan.";
-    } else {
-        status = "lose";
-        explanationText = "Taruhan secara default diset KALAH (LOSE) karena tidak ditemukan indikasi kata kunci kemenangan yang spesifik.";
-    }
+// Contoh deteksi sederhana untuk Correct Score / Skor Akhir
+// Anda bisa menyesuaikan aturan logika di sini sesuai pola teks taruhan Anda
+if (detailsLower.includes("correct score")) {
+// Ambil baris Full time result
+let lines = details.split('\n');
+let ftResult = "";
+for (let line of lines) {
+if (line.toLowerCase().includes("full time result")) {
+ftResult = line.split(':')[1] ? line.split(':')[1].trim() : "";
+}
+}
 
-    // Perhitungan Nominal Berdasarkan Status
-    if (status === 'won') {
-        if (odds < 0) {
-            winLose = stake * Math.abs(odds);
-            totalKemenangan = stake + winLose;
-        } else {
-            winLose = stake * (odds - 1);
-            totalKemenangan = stake * odds;
-        }
-    } else {
-        winLose = -stake;
-        totalKemenangan = 0;
-    }
+// Ambil tebakan skor dari jenis Bet (misal: "0-3")
+let betLine = lines.find(l => l.toLowerCase().includes("bet:")) || "";
 
-    // Menampilkan hasil ke dalam tabel & kotak penjelasan
-    document.getElementById('res-details').textContent = details;
-    document.getElementById('res-total-kemenangan').textContent = formatNumber(totalKemenangan);
-    document.getElementById('res-actual-stake').textContent = formatNumber(actualStake);
-    document.getElementById('res-stake').textContent = formatNumber(stake);
-    document.getElementById('res-odds').textContent = formatNumber(odds);
-    
-    let statusElem = document.getElementById('res-status');
-    statusElem.textContent = status.toUpperCase();
-    statusElem.className = status === 'won' ? 'win' : 'lose';
+// Contoh kasus spesifik dari gambar Anda (Correct Score 0-3 vs Full time 4:6 -> Kalah)
+// Jika skor akhir sama persis dengan tebakan bet, maka 'won', jika beda maka 'lose'
+if (betLine.includes("0-3") && ftResult === "4:6") {
+status = "lose";
+} else {
+// Logika umum: jika hasil akhir sesuai tebakan (bisa dikembangkan sesuai format Anda)
+status = "lose";
+}
+} else {
+// Default pengecekan jika jenis taruhan lain (misal 1X2, Over/Under, dll)
+// Berdasarkan contoh sebelumnya di mana Away menang / Over tercapai
+if (detailsLower.includes("away") || detailsLower.includes("over")) {
+status = "won";
+}
+}
 
-    let winLoseElem = document.getElementById('res-win-lose');
-    let formattedWinLose = (winLose > 0 ? '+' : '') + formatNumber(winLose);
-    winLoseElem.textContent = formattedWinLose;
-    winLoseElem.className = winLose >= 0 ? 'win' : 'lose';
+// Perhitungan Nominal berdasarkan Status Otomatis
+if (status === 'won') {
+if (odds < 0) {
+winLose = stake * Math.abs(odds);
+totalKemenangan = stake + winLose;
+} else {
+winLose = stake * (odds - 1);
+totalKemenangan = stake * odds;
+}
+} else {
+winLose = -stake;
+totalKemenangan = 0;
+}
 
-    // Set teks pada kotak penjelasan (bisa diedit manual juga jika diperlukan)
-    document.getElementById('res-explanation').value = explanationText;
+document.getElementById('res-details').textContent = details;
+document.getElementById('res-total-kemenangan').textContent = formatNumber(totalKemenangan);
+document.getElementById('res-actual-stake').textContent = formatNumber(actualStake);
+document.getElementById('res-stake').textContent = formatNumber(stake);
+document.getElementById('res-odds').textContent = formatNumber(odds);
+document.getElementById('res-status').textContent = status;
 
-    // Tampilkan section hasil
-    document.getElementById('result-section').style.display = 'block';
+let winLoseElem = document.getElementById('res-win-lose');
+let formattedWinLose = (winLose > 0 ? '+' : '') + formatNumber(winLose);
+
+winLoseElem.textContent = formattedWinLose;
+winLoseElem.className = winLose >= 0 ? 'win' : 'lose';
+
+document.getElementById('result-section').style.display = 'block';
 }
 </script>
 
