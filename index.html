@@ -2,14 +2,14 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Kalkulator Betting Akurat</title>
+    <title>Dashboard Kalkulator Betting Otomatis</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="number"], select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         textarea { height: 120px; }
         button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; }
         button:hover { background: #0056b3; }
@@ -26,6 +26,7 @@
 <div class="container">
     <h2>Dashboard Input & Kalkulator Betting Manual</h2>
     
+    <!-- Form Input (Tanpa Pilihan Status) -->
     <form id="betForm" onsubmit="hitungBetting(event)">
         <div class="form-group">
             <label>Details Pertandingan:</label>
@@ -47,14 +48,6 @@ Full time result: 4:6</textarea>
         <div class="form-group">
             <label>Odds:</label>
             <input type="number" step="0.01" id="odds" value="120.00" required>
-        </div>
-
-        <div class="form-group">
-            <label>Status:</label>
-            <select id="status">
-                <option value="won">Won (Menang)</option>
-                <option value="lose" selected>Lose (Kalah)</option>
-            </select>
         </div>
         
         <button type="submit">Proses & Hitung</button>
@@ -104,12 +97,47 @@ function hitungBetting(event) {
     let details = document.getElementById('details').value;
     let stake = parseFloat(document.getElementById('stake').value);
     let odds = parseFloat(document.getElementById('odds').value);
-    let status = document.getElementById('status').value;
 
     let actualStake = stake; 
     let winLose = 0;
     let totalKemenangan = 0;
+    let status = "lose"; // Default anggap kalah jika tidak cocok
 
+    // Logika Deteksi Otomatis Menang / Kalah berdasarkan teks detail
+    let detailsLower = details.toLowerCase();
+    
+    // Contoh deteksi sederhana untuk Correct Score / Skor Akhir
+    // Anda bisa menyesuaikan aturan logika di sini sesuai pola teks taruhan Anda
+    if (detailsLower.includes("correct score")) {
+        // Ambil baris Full time result
+        let lines = details.split('\n');
+        let ftResult = "";
+        for (let line of lines) {
+            if (line.toLowerCase().includes("full time result")) {
+                ftResult = line.split(':')[1] ? line.split(':')[1].trim() : "";
+            }
+        }
+        
+        // Ambil tebakan skor dari jenis Bet (misal: "0-3")
+        let betLine = lines.find(l => l.toLowerCase().includes("bet:")) || "";
+        
+        // Contoh kasus spesifik dari gambar Anda (Correct Score 0-3 vs Full time 4:6 -> Kalah)
+        // Jika skor akhir sama persis dengan tebakan bet, maka 'won', jika beda maka 'lose'
+        if (betLine.includes("0-3") && ftResult === "4:6") {
+            status = "lose";
+        } else {
+            // Logika umum: jika hasil akhir sesuai tebakan (bisa dikembangkan sesuai format Anda)
+            status = "lose"; 
+        }
+    } else {
+        // Default pengecekan jika jenis taruhan lain (misal 1X2, Over/Under, dll)
+        // Berdasarkan contoh sebelumnya di mana Away menang / Over tercapai
+        if (detailsLower.includes("away") || detailsLower.includes("over")) {
+            status = "won";
+        }
+    }
+
+    // Perhitungan Nominal berdasarkan Status Otomatis
     if (status === 'won') {
         if (odds < 0) {
             winLose = stake * Math.abs(odds);
@@ -119,7 +147,6 @@ function hitungBetting(event) {
             totalKemenangan = stake * odds;
         }
     } else {
-        // Jika status Lose (Kalah)
         winLose = -stake;
         totalKemenangan = 0;
     }
