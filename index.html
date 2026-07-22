@@ -33,39 +33,21 @@
             <textarea id="details" required>Soccer
 France vs England
 *WORLD CUP 2026 (IN CANADA, MEXICO & USA)
-Type: Indonesia
-Bet: Over/Under over 5.5 @-2.18
-Live Score: 0:4
+Type: Europe
+Bet: FT.1X2 away 0 @2.38
+Live Score: 0:1
 Half time result: 0:4
 Full time result: 4:6</textarea>
         </div>
 
         <div class="form-group">
-            <label>Currency:</label>
-            <input type="text" id="currency" value="IDR" required>
-        </div>
-        
-        <div class="form-group">
-            <label>Actual Stake:</label>
-            <input type="number" step="0.01" id="actual_stake" value="78480.00" required>
-        </div>
-
-        <div class="form-group">
             <label>Stake:</label>
-            <input type="number" step="0.01" id="stake" value="36000.00" required>
+            <input type="number" step="0.01" id="stake" value="50000.00" required>
         </div>
         
         <div class="form-group">
             <label>Odds:</label>
-            <input type="number" step="0.01" id="odds" value="-2.18" required>
-        </div>
-
-        <div class="form-group">
-            <label>Status:</label>
-            <select id="status">
-                <option value="won">won</option>
-                <option value="lost">lost</option>
-            </select>
+            <input type="number" step="0.01" id="odds" value="2.38" required>
         </div>
         
         <button type="submit">Proses & Hitung</button>
@@ -112,28 +94,29 @@ function formatNumber(num) {
 function hitungBetting(event) {
     event.preventDefault();
 
-    // Ambil nilai dari input form
+    // Ambil nilai dari form yang tersisa
     let details = document.getElementById('details').value;
-    let currency = document.getElementById('currency').value;
-    let actualStake = parseFloat(document.getElementById('actual_stake').value);
     let stake = parseFloat(document.getElementById('stake').value);
     let odds = parseFloat(document.getElementById('odds').value);
-    let status = document.getElementById('status').value;
 
+    // Nilai Default & Auto-Kalkulasi
+    let currency = "IDR";
+    let status = "won";
+    let actualStake = 0;
     let winLose = 0;
 
-    // Logika Perhitungan Akurat
-    if (status === 'won') {
-        if (odds < 0) {
-            winLose = stake * Math.abs(odds);
-        } else {
-            winLose = stake * (odds - 1);
-        }
+    // Logika Perhitungan (Menyesuaikan otomatis untuk Odds plus atau minus)
+    if (odds < 0) {
+        // Jika odds minus (Indo/Malay)
+        actualStake = stake * Math.abs(odds);
+        winLose = stake * Math.abs(odds); 
     } else {
-        winLose = -stake;
+        // Jika odds positif (Eropa/Desimal)
+        actualStake = stake; // Pada odds plus, actual stake biasanya sama dengan modal
+        winLose = stake * (odds - 1);
     }
 
-    // Masukkan hasil ke dalam elemen tabel
+    // Eksekusi output ke elemen tabel
     document.getElementById('res-details').textContent = details;
     document.getElementById('res-currency').textContent = currency;
     document.getElementById('res-actual-stake').textContent = formatNumber(actualStake);
@@ -147,7 +130,7 @@ function hitungBetting(event) {
     winLoseElem.textContent = formattedWinLose;
     winLoseElem.className = winLose >= 0 ? 'win' : 'lose';
 
-    // Tampilkan bagian hasil
+    // Munculkan tabel
     document.getElementById('result-section').style.display = 'block';
 }
 </script>
