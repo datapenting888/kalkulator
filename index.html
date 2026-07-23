@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Kalkulator Betting Otomatis</title>
+<title>KALKULATOR BETTINGAN BOLA</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -190,7 +190,7 @@ input[type="number"]:focus, textarea:focus {
   box-shadow: 0 0 0 3px var(--gold-dim);
 }
 
-textarea { height: 120px; resize: vertical; }
+textarea { height: 120px; resize: vertical; overflow: hidden; }
 
 button {
   background: var(--gold-gradient);
@@ -252,6 +252,7 @@ tbody tr:last-child td { border-bottom: none; }
 .explanation-box textarea {
   background: #0d1022;
   color: #c9cee8;
+  min-height: 260px;
   height: 260px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12.5px;
@@ -349,6 +350,25 @@ tbody tr:last-child td { border-bottom: none; }
 function formatNumber(num) {
     return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+// ============================================================
+// AUTO-GROW TEXTAREA: tinggi otomatis menyesuaikan isi konten
+// ============================================================
+function autoGrowTextarea(el, minHeight) {
+    if (!el) return;
+    el.style.height = 'auto';
+    let newHeight = el.scrollHeight;
+    if (minHeight && newHeight < minHeight) newHeight = minHeight;
+    el.style.height = newHeight + 'px';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const detailsEl = document.getElementById('details');
+    if (detailsEl) {
+        autoGrowTextarea(detailsEl, 120);
+        detailsEl.addEventListener('input', () => autoGrowTextarea(detailsEl, 120));
+    }
+});
 
 // ============================================================
 // BAGIAN 1: PARSER SLIP TARUHAN MULTI-LEG (PARLAY / MIX PARLAY)
@@ -642,9 +662,11 @@ function hitungBetting(event) {
     winLoseElem.textContent = formattedWinLose;
     winLoseElem.className = payout.winLose >= 0 ? 'win' : 'lose';
 
-    document.getElementById('res-explanation').value = explanationText;
+    const resExplanationEl = document.getElementById('res-explanation');
+    resExplanationEl.value = explanationText;
 
     document.getElementById('result-section').style.display = 'block';
+    autoGrowTextarea(resExplanationEl, 260);
 }
 </script>
 
