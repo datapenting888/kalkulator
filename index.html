@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>KALKULATOR BETTINGAN BOLA</title>
+<title>Dashboard Kalkulator Betting Otomatis dengan Gemini AI</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -15,11 +15,6 @@
   --border-soft: rgba(255,255,255,0.05);
   --text-primary: #f5f3f8;
   --text-muted: #9297b3;
-  --rose: #f3a6cf;
-  --lime: #dbf500;
-  --lime-dim: rgba(219,245,0,0.15);
-  --violet: #a78bfa;
-  --violet-dim: rgba(167,139,250,0.15);
   --win: #3ce6a0;
   --lose: #fb7189;
   --shadow: 0 20px 60px rgba(0,0,0,0.45);
@@ -65,27 +60,6 @@ body {
   box-shadow: 0 0 14px rgba(217,180,90,0.5);
 }
 
-.container::after {
-  content: "";
-  position: absolute;
-  bottom: -60px; right: -60px;
-  width: 220px; height: 220px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(217,180,90,0.10) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.gold-wave {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0.55;
-  z-index: 0;
-}
-.gold-wave.top-left { top: -18px; left: -18px; width: 260px; }
-.gold-wave.bottom-right { bottom: -18px; right: -18px; width: 260px; transform: rotate(180deg); }
-
-.container > * { position: relative; z-index: 1; }
-
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -118,21 +92,7 @@ h2 {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  position: relative;
-  padding-bottom: 20px;
   margin: 0 0 28px;
-  letter-spacing: -0.01em;
-  filter: drop-shadow(0 0 18px rgba(217,180,90,0.18));
-}
-h2::after {
-  content: "";
-  position: absolute;
-  left: 0; bottom: 0;
-  width: 100%; height: 8px;
-  background:
-    linear-gradient(90deg, transparent 0%, var(--gold) 100%) bottom / 100% 1px no-repeat,
-    radial-gradient(circle at 0 0, var(--gold-light) 0 3px, transparent 4px) left bottom no-repeat;
-  opacity: 0.9;
 }
 
 h3 {
@@ -144,17 +104,6 @@ h3 {
   background-clip: text;
   color: transparent;
   margin: 0 0 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-h3::before {
-  content: "";
-  width: 4px; height: 18px;
-  border-radius: 2px;
-  background: var(--gold-gradient);
-  box-shadow: 0 0 10px rgba(217,180,90,0.5);
-  display: inline-block;
 }
 
 .form-group { margin-bottom: 20px; }
@@ -168,7 +117,7 @@ label {
   color: var(--gold-light);
 }
 
-input[type="number"], textarea {
+input[type="number"], input[type="password"], textarea {
   width: 100%;
   padding: 12px 14px;
   box-sizing: border-box;
@@ -178,12 +127,10 @@ input[type="number"], textarea {
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-input[type="number"]::placeholder, textarea::placeholder { color: var(--text-muted); }
-
-input[type="number"]:focus, textarea:focus {
+input:focus, textarea:focus {
   outline: none;
   border-color: var(--gold);
   background: rgba(217,180,90,0.06);
@@ -202,12 +149,17 @@ button {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  letter-spacing: 0.01em;
   box-shadow: 0 8px 24px rgba(217,180,90,0.25);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
-button:hover { filter: brightness(1.08); box-shadow: 0 10px 30px rgba(217,180,90,0.35); transform: translateY(-1px); }
-button:active { transform: translateY(0); }
+button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+.btn-gemini {
+  background: linear-gradient(120deg, #818cf8 0%, #6366f1 100%);
+  color: #fff;
+  margin-top: 10px;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.3);
+}
 
 table {
   width: 100%;
@@ -225,7 +177,6 @@ th, td {
   padding: 14px 16px;
   text-align: left;
   font-size: 13px;
-  vertical-align: middle;
   white-space: nowrap;
 }
 
@@ -234,62 +185,46 @@ th {
   color: var(--gold-light);
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-weight: 700;
-  border-bottom: 1px solid rgba(217,180,90,0.25);
 }
 
 td { background: rgba(255,255,255,0.015); color: var(--text-primary); }
-tbody tr:last-child td { border-bottom: none; }
 
-.win { color: var(--win); font-weight: 700; text-shadow: 0 0 12px rgba(60,230,160,0.25); }
-.lose { color: var(--lose); font-weight: 700; text-shadow: 0 0 12px rgba(251,113,137,0.2); }
+.win { color: var(--win); font-weight: 700; }
+.lose { color: var(--lose); font-weight: 700; }
 
 #result-section { display: none; margin-top: 34px; }
 
-.explanation-box { margin-top: 20px; }
 .explanation-box textarea {
   background: #0d1022;
   color: #c9cee8;
-  min-height: 260px;
-  height: 260px;
-  overflow: hidden;
+  height: 200px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12.5px;
-  line-height: 1.6;
-  border-color: rgba(217,180,90,0.2);
+}
+
+.gemini-box textarea {
+  background: #10132b;
+  color: #a5b4fc;
+  height: 220px;
+  font-family: 'Inter', sans-serif;
+  border-color: rgba(99,102,241,0.3);
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-<svg class="gold-wave top-left" viewBox="0 0 260 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M0 90 C 60 20, 120 130, 180 55 S 260 10, 260 10" stroke="url(#goldWaveGrad)" stroke-width="2.5" stroke-linecap="round"/>
-  <defs>
-    <linearGradient id="goldWaveGrad" x1="0" y1="0" x2="260" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#f6e7a8"/>
-      <stop offset="0.5" stop-color="#d9b45a"/>
-      <stop offset="1" stop-color="#a7782c"/>
-    </linearGradient>
-  </defs>
-</svg>
-<svg class="gold-wave bottom-right" viewBox="0 0 260 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M0 90 C 60 20, 120 130, 180 55 S 260 10, 260 10" stroke="url(#goldWaveGrad2)" stroke-width="2.5" stroke-linecap="round"/>
-  <defs>
-    <linearGradient id="goldWaveGrad2" x1="0" y1="0" x2="260" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#f6e7a8"/>
-      <stop offset="0.5" stop-color="#d9b45a"/>
-      <stop offset="1" stop-color="#a7782c"/>
-    </linearGradient>
-  </defs>
-</svg>
-<span class="eyebrow">SMB Group</span>
-<h2>KALKULATOR BETTINGAN BOLA</h2>
+<span class="eyebrow">SMB Group · Betting Engine + Gemini AI</span>
+<h2>Dashboard Kalkulator & Analisis AI</h2>
 
 <!-- Form Input -->
 <form id="betForm" onsubmit="hitungBetting(event)">
+<div class="form-group">
+<label>Gemini API Key:</label>
+<input type="password" id="apiKey" placeholder="Masukkan Gemini API Key Anda di sini...">
+</div>
+
 <div class="form-group">
 <label>Details Pertandingan:</label>
 <textarea id="details" required placeholder="Masukkan detail taruhan di sini..."></textarea>
@@ -297,7 +232,7 @@ tbody tr:last-child td { border-bottom: none; }
 
 <div class="form-group">
 <label>Stake:</label>
-<input type="number" step="any" id="stake" required placeholder="Contoh: 80,000.00">
+<input type="number" step="any" id="stake" required placeholder="Contoh: 100">
 </div>
 
 <div class="form-group">
@@ -320,6 +255,7 @@ tbody tr:last-child td { border-bottom: none; }
 <th>Stake</th>
 <th>Win & Lose</th>
 <th>Odds</th>
+<th>Ip</th>
 <th>Status</th>
 </tr>
 </thead>
@@ -331,54 +267,43 @@ tbody tr:last-child td { border-bottom: none; }
 <td id="res-stake"></td>
 <td id="res-win-lose"></td>
 <td id="res-odds"></td>
+<td>-</td>
 <td id="res-status"></td>
 </tr>
 </tbody>
 </table>
 
-<!-- Kotak Penjelasan -->
-<div class="form-group explanation-box">
-<label for="res-explanation">Penjelasan:</label>
-<textarea id="res-explanation" placeholder="Penjelasan kalkulasi atau catatan status akan muncul otomatis di sini..."></textarea>
+<!-- Kotak Penjelasan Kalkulasi -->
+<div class="form-group" style="margin-top: 20px;">
+<label for="res-explanation">Penjelasan Sistem:</label>
+<textarea id="res-explanation" readonly></textarea>
+</div>
+
+<!-- Kotak Analisis Gemini AI -->
+<div class="form-group explanation-box gemini-box">
+<label for="gemini-output">Analisis Tambahan dari Gemini AI:</label>
+<textarea id="gemini-output" readonly placeholder="Klik tombol di bawah untuk meminta analisis mendalam dari Gemini AI..."></textarea>
+<button type="button" class="btn-gemini" onclick="tanyaGeminiAI()">✨ Analisis dengan Gemini AI</button>
 </div>
 </div>
 
 </div>
+
+<!-- Menggunakan SDK Google Gen AI untuk Browser -->
+<script type="importmap">
+  {
+    "imports": {
+      "@google/genai": "https://esm.run/@google/genai"
+    }
+  }
+</script>
 
 <script>
+let globalCalculationData = {};
+
 function formatNumber(num) {
     return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-
-// ============================================================
-// AUTO-GROW TEXTAREA: tinggi otomatis menyesuaikan isi konten
-// ============================================================
-function autoGrowTextarea(el, minHeight) {
-    if (!el) return;
-    el.style.height = 'auto';
-    let newHeight = el.scrollHeight;
-    if (minHeight && newHeight < minHeight) newHeight = minHeight;
-    el.style.height = newHeight + 'px';
-}
-
-
-
-// ============================================================
-// BAGIAN 1: PARSER SLIP TARUHAN MULTI-LEG (PARLAY / MIX PARLAY)
-// ============================================================
-// Details Pertandingan bisa berisi satu atau beberapa pertandingan
-// yang dipisah baris kosong, masing-masing dengan format seperti:
-//
-//   Soccer
-//   Genoa vs AC Trento
-//   ...
-//   Bet: Both/One/Neither Team To Score both teams to score 0 @2.63
-//   Full time result: 2:1
-//
-// Fungsi di bawah ini mem-parsing tiap leg, membandingkan pilihan
-// taruhan (Bet:) dengan hasil akhir (Full time result), lalu
-// menentukan MENANG/KALAH per leg secara otomatis dan akurat —
-// bukan menebak dari kata kunci umum seperti versi sebelumnya.
 
 function parseBetDescription(desc) {
     desc = desc.toLowerCase();
@@ -413,13 +338,7 @@ function parseBetLine(betLineRaw) {
     let line = lineMatch ? parseFloat(lineMatch[1]) : null;
     let withoutLine = lineMatch ? withoutOdds.slice(0, lineMatch.index).trim() : withoutOdds;
     let parsed = parseBetDescription(withoutLine);
-    return {
-        odds: odds,
-        line: line,
-        market: parsed.market,
-        selection: parsed.selection,
-        description: withoutLine
-    };
+    return { odds: odds, line: line, market: parsed.market, selection: parsed.selection, description: withoutLine };
 }
 
 function determineLegResult(betInfo, homeGoals, awayGoals) {
@@ -440,25 +359,6 @@ function determineLegResult(betInfo, homeGoals, awayGoals) {
         if (selection === 'one') return ((homeGoals > 0) !== (awayGoals > 0)) ? 'win' : 'lose';
     }
     return 'unknown';
-}
-
-function describeMarket(betInfo) {
-    switch (betInfo.market) {
-        case '1x2':
-            return 'FT 1X2 - Pilihan: ' +
-                (betInfo.selection === 'home' ? 'Home Menang' :
-                 betInfo.selection === 'away' ? 'Away Menang' :
-                 betInfo.selection === 'draw' ? 'Seri (Draw)' : 'tidak dikenali');
-        case 'ou':
-            return 'Over/Under - Pilihan: ' + (betInfo.selection === 'over' ? 'Over ' : 'Under ') + formatNumber(betInfo.line) + ' gol';
-        case 'btts':
-            return 'Both Teams To Score - Pilihan: ' +
-                (betInfo.selection === 'both' ? 'Ya, kedua tim mencetak gol' :
-                 betInfo.selection === 'neither' ? 'Tidak ada tim mencetak gol' :
-                 betInfo.selection === 'one' ? 'Hanya satu tim mencetak gol' : 'tidak dikenali');
-        default:
-            return 'Pasaran tidak dikenali (' + betInfo.description + ')';
-    }
 }
 
 function parseLeg(block) {
@@ -487,77 +387,20 @@ function parseBetSlip(text) {
     return legs;
 }
 
-// ============================================================
-// BAGIAN 2: DETEKSI SEDERHANA (fallback jika Details BUKAN slip
-// multi-leg terstruktur, misalnya cuma catatan bebas)
-// ============================================================
-function containsWord(text, words) {
-    return words.some(function(w) {
-        let re = new RegExp('\\b' + w + '\\b', 'i');
-        return re.test(text);
-    });
-}
-
-function detectStatusFromKeywords(details) {
-    let winWords = ["won", "win", "menang", "unggul"];
-    let loseWords = ["lose", "lost", "kalah"];
-    let isWin = containsWord(details, winWords);
-    let isLose = containsWord(details, loseWords);
-
-    if (isWin && !isLose) {
-        return { status: "won", note: "Status MENANG terdeteksi dari kata kunci kemenangan pada Details (mode teks bebas, bukan slip terstruktur)." };
-    } else if (isLose && !isWin) {
-        return { status: "lose", note: "Status KALAH terdeteksi dari kata kunci kekalahan pada Details (mode teks bebas, bukan slip terstruktur)." };
-    } else if (isWin && isLose) {
-        return { status: "lose", note: "Details mengandung kata kunci menang dan kalah sekaligus (ambigu). Status di-default-kan ke KALAH untuk keamanan. Mohon periksa detail." };
-    } else {
-        return { status: "lose", note: "Tidak ditemukan kata kunci menang/kalah yang jelas dan tidak terdeteksi format slip terstruktur (Bet: ... / Full time result: ...). Status di-default-kan ke KALAH." };
-    }
-}
-
-// ============================================================
-// BAGIAN 3: PERHITUNGAN PEMBAYARAN (Decimal / American, auto-detect)
-// ============================================================
 function calcPayout(stake, odds, status) {
     let winLose = 0, totalKemenangan = 0, explanationText = "";
-
     if (status === 'won') {
-        let isAmerican = Math.abs(odds) >= 100;
-        if (isAmerican) {
-            if (odds > 0) {
-                winLose = stake * (odds / 100);
-                explanationText += "Odds " + (odds > 0 ? '+' : '') + formatNumber(odds) + " terdeteksi sebagai American (positif).\n" +
-                    "Rumus: Keuntungan = Stake x (Odds / 100)\n" +
-                    formatNumber(stake) + " x (" + formatNumber(odds) + " / 100) = " + formatNumber(winLose);
-            } else {
-                winLose = stake * (100 / Math.abs(odds));
-                explanationText += "Odds " + formatNumber(odds) + " terdeteksi sebagai American (negatif).\n" +
-                    "Rumus: Keuntungan = Stake x (100 / |Odds|)\n" +
-                    formatNumber(stake) + " x (100 / " + formatNumber(Math.abs(odds)) + ") = " + formatNumber(winLose);
-            }
-            totalKemenangan = stake + winLose;
-            explanationText += "\nTotal Kemenangan = Stake + Keuntungan = " + formatNumber(stake) + " + " + formatNumber(winLose) + " = " + formatNumber(totalKemenangan);
-        } else {
-            winLose = stake * (odds - 1);
-            totalKemenangan = stake * odds;
-            explanationText += "Odds " + formatNumber(odds) + " terdeteksi sebagai Decimal.\n" +
-                "Rumus: Total Kemenangan = Stake x Odds\n" +
-                formatNumber(stake) + " x " + formatNumber(odds) + " = " + formatNumber(totalKemenangan) + "\n" +
-                "Keuntungan = Total Kemenangan - Stake = " + formatNumber(totalKemenangan) + " - " + formatNumber(stake) + " = " + formatNumber(winLose);
-        }
+        winLose = stake * (odds - 1);
+        totalKemenangan = stake * odds;
+        explanationText = "Odds Decimal terdeteksi. Total Kemenangan = Stake x Odds (" + formatNumber(stake) + " x " + formatNumber(odds) + " = " + formatNumber(totalKemenangan) + ").";
     } else {
         winLose = -stake;
         totalKemenangan = 0;
-        explanationText += "Karena taruhan KALAH, seluruh Stake hilang.\n" +
-            "Win/Lose = -Stake = -" + formatNumber(stake) + "\n" +
-            "Total Kemenangan = 0";
+        explanationText = "Taruhan kalah, seluruh Stake senilai -" + formatNumber(stake) + " hilang.";
     }
     return { winLose: winLose, totalKemenangan: totalKemenangan, explanationText: explanationText };
 }
 
-// ============================================================
-// BAGIAN 4: HANDLER UTAMA
-// ============================================================
 function hitungBetting(event) {
     event.preventDefault();
 
@@ -565,101 +408,83 @@ function hitungBetting(event) {
     let stake = parseFloat(document.getElementById('stake').value);
     let odds = parseFloat(document.getElementById('odds').value);
 
-    if (isNaN(stake) || stake <= 0) {
-        alert("Stake harus berupa angka lebih besar dari 0.");
-        return;
-    }
-    if (isNaN(odds) || odds === 0) {
-        alert("Odds harus diisi dengan angka dan tidak boleh 0.");
-        return;
-    }
-    if (odds > 0 && odds < 100 && odds <= 1) {
-        alert("Odds decimal harus lebih besar dari 1 (contoh: 1.85). Jika ini odds American, gunakan nilai >= 100 atau <= -100.");
-        return;
-    }
-
     let status = "lose";
     let explanationText = "";
-
-    // --- Coba parsing sebagai slip multi-leg (parlay) terlebih dahulu ---
     let legs = parseBetSlip(details);
 
     if (legs.length > 0) {
-        let isSingle = legs.length === 1;
-
-        explanationText += isSingle
-            ? "Terdeteksi taruhan SINGLE (1 pertandingan):\n\n"
-            : "Terdeteksi " + legs.length + " leg pertandingan (parlay/mix parlay):\n\n";
-
-        legs.forEach(function(l, i) {
-            explanationText += (isSingle ? "" : (i + 1) + ". ") + l.teamHome + " vs " + l.teamAway + "\n";
-            explanationText += "   Pasaran   : " + describeMarket(l.betInfo) + " @" + formatNumber(l.betInfo.odds) + "\n";
-            explanationText += "   Skor FT   : " + l.homeGoals + " - " + l.awayGoals + "\n";
-            explanationText += "   Hasil     : " + (l.result === 'win' ? 'MENANG' : l.result === 'lose' ? 'KALAH' : l.result === 'push' ? 'SERI/PUSH' : 'TIDAK DIKENALI (perlu cek manual)') + "\n\n";
-        });
-
         let anyLose = legs.some(function(l) { return l.result === 'lose'; });
         let anyUnknown = legs.some(function(l) { return l.result === 'unknown'; });
-
-        if (anyUnknown) {
-            explanationText += "PERHATIAN: ada " + (isSingle ? "pasaran" : "leg dengan jenis pasaran") + " yang belum dikenali sistem (selain FT 1X2 / Over-Under / Both Teams To Score). Mohon verifikasi manual sebelum mempercayai status akhir.\n\n";
-        }
-
         status = (anyLose || anyUnknown) ? "lose" : "won";
-
-        let computedCombinedOdds = legs.reduce(function(acc, l) {
-            return l.result === 'push' ? acc : acc * l.betInfo.odds;
-        }, 1);
-
-        if (isSingle) {
-            explanationText += "Karena ini taruhan SINGLE (hanya 1 pertandingan), status taruhan langsung mengikuti hasil pertandingan tersebut.\n";
-            explanationText += "Odds pertandingan (cross-check) = " + formatNumber(computedCombinedOdds) + "\n";
-            explanationText += "Odds yang Anda masukkan di form = " + formatNumber(odds) + "\n";
-            if (Math.abs(computedCombinedOdds - odds) > Math.max(0.01, computedCombinedOdds * 0.02)) {
-                explanationText += "Catatan: ada selisih antara odds hasil parsing dan odds yang Anda masukkan, mohon cek ulang.\n";
-            }
-            explanationText += "\nStatus: " + (status === 'won' ? 'MENANG' : 'KALAH') + "\n\n";
-        } else {
-            explanationText += "Karena ini taruhan gabungan (parlay/mix parlay), SEMUA leg harus MENANG agar keseluruhan taruhan menang.\n";
-            explanationText += "Odds gabungan hasil kali tiap leg (cross-check) = " + formatNumber(computedCombinedOdds) + "\n";
-            explanationText += "Odds yang Anda masukkan di form           = " + formatNumber(odds) + "\n";
-            if (Math.abs(computedCombinedOdds - odds) > Math.max(0.01, computedCombinedOdds * 0.02)) {
-                explanationText += "Catatan: ada selisih antara odds gabungan hasil parsing dan odds yang Anda masukkan, mohon cek ulang.\n";
-            }
-            explanationText += "\nStatus keseluruhan: " + (status === 'won' ? 'MENANG' : 'KALAH') + "\n\n";
-        }
-
+        explanationText += "Berhasil memparsing " + legs.length + " leg pertandingan.\n";
     } else {
-        let detected = detectStatusFromKeywords(details);
-        status = detected.status;
-        explanationText += detected.note + "\n\n";
+        explanationText += "Mode teks bebas digunakan.\n";
+        if (details.toLowerCase().includes('win') || details.toLowerCase().includes('menang')) {
+            status = 'won';
+        }
     }
 
-    // --- Hitung pembayaran berdasarkan status & odds yang dimasukkan di form ---
     let payout = calcPayout(stake, odds, status);
-    explanationText += payout.explanationText;
+    explanationText += "\n" + payout.explanationText;
 
-    // Menampilkan hasil ke dalam tabel & kotak penjelasan
+    // Simpan data global untuk dikirim ke Gemini
+    globalCalculationData = { details, stake, odds, status, totalKemenangan: payout.totalKemenangan, winLose: payout.winLose };
+
+    // Tampilkan ke UI
     document.getElementById('res-details').textContent = details;
     document.getElementById('res-total-kemenangan').textContent = formatNumber(payout.totalKemenangan);
     document.getElementById('res-actual-stake').textContent = formatNumber(stake);
     document.getElementById('res-stake').textContent = formatNumber(stake);
-    document.getElementById('res-odds').textContent = (odds > 0 ? '+' : '') + formatNumber(odds);
+    document.getElementById('res-odds').textContent = formatNumber(odds);
 
     let statusElem = document.getElementById('res-status');
     statusElem.textContent = status.toUpperCase();
     statusElem.className = status === 'won' ? 'win' : 'lose';
 
     let winLoseElem = document.getElementById('res-win-lose');
-    let formattedWinLose = (payout.winLose > 0 ? '+' : '') + formatNumber(payout.winLose);
-    winLoseElem.textContent = formattedWinLose;
+    winLoseElem.textContent = (payout.winLose > 0 ? '+' : '') + formatNumber(payout.winLose);
     winLoseElem.className = payout.winLose >= 0 ? 'win' : 'lose';
 
-    const resExplanationEl = document.getElementById('res-explanation');
-    resExplanationEl.value = explanationText;
-
+    document.getElementById('res-explanation').value = explanationText;
+    document.getElementById('gemini-output').value = ""; // Reset box gemini
     document.getElementById('result-section').style.display = 'block';
-    autoGrowTextarea(resExplanationEl, 260);
+}
+
+// Fungsi Integrasi Gemini AI
+async function tanyaGeminiAI() {
+    let apiKey = document.getElementById('apiKey').value.trim();
+    if (!apiKey) {
+        alert("Mohon masukkan Gemini API Key terlebih dahulu di kolom atas!");
+        return;
+    }
+
+    let geminiOutputBox = document.getElementById('gemini-output');
+    geminiOutputBox.value = "Sedang meminta analisis dari Gemini AI...";
+
+    try {
+        // Menggunakan SDK Resmi Google Gen AI (@google/genai)
+        const { GoogleGenAI } = await import("@google/genai");
+        const ai = new GoogleGenAI({ apiKey: apiKey });
+
+        let prompt = `Berikan analisis profesional dan ringkas mengenai slip taruhan berikut dalam bahasa Indonesia:
+- Detail Pertandingan: ${globalCalculationData.details}
+- Stake: ${globalCalculationData.stake}
+- Odds: ${globalCalculationData.odds}
+- Status Akhir: ${globalCalculationData.status.toUpperCase()}
+- Total Kemenangan/Kerugian: ${globalCalculationData.winLose}
+
+Berikan evaluasi performa taruhan ini dan catatan manajemen risiko yang baik.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+
+        geminiOutputBox.value = response.text;
+    } catch (error) {
+        console.error(error);
+        geminiOutputBox.value = "Terjadi kesalahan saat memanggil Gemini API: " + error.message;
+    }
 }
 </script>
 
