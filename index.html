@@ -190,7 +190,7 @@ input[type="number"]:focus, textarea:focus {
   box-shadow: 0 0 0 3px var(--gold-dim);
 }
 
-textarea { height: 120px; resize: vertical; overflow: hidden; }
+textarea { height: 120px; resize: vertical; }
 
 button {
   background: var(--gold-gradient);
@@ -254,6 +254,7 @@ tbody tr:last-child td { border-bottom: none; }
   color: #c9cee8;
   min-height: 260px;
   height: 260px;
+  overflow: hidden;
   font-family: 'JetBrains Mono', monospace;
   font-size: 12.5px;
   line-height: 1.6;
@@ -319,7 +320,6 @@ tbody tr:last-child td { border-bottom: none; }
 <th>Stake</th>
 <th>Win & Lose</th>
 <th>Odds</th>
-<th>Ip</th>
 <th>Status</th>
 </tr>
 </thead>
@@ -331,7 +331,6 @@ tbody tr:last-child td { border-bottom: none; }
 <td id="res-stake"></td>
 <td id="res-win-lose"></td>
 <td id="res-odds"></td>
-<td>-</td>
 <td id="res-status"></td>
 </tr>
 </tbody>
@@ -362,13 +361,7 @@ function autoGrowTextarea(el, minHeight) {
     el.style.height = newHeight + 'px';
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    const detailsEl = document.getElementById('details');
-    if (detailsEl) {
-        autoGrowTextarea(detailsEl, 120);
-        detailsEl.addEventListener('input', () => autoGrowTextarea(detailsEl, 120));
-    }
-});
+
 
 // ============================================================
 // BAGIAN 1: PARSER SLIP TARUHAN MULTI-LEG (PARLAY / MIX PARLAY)
