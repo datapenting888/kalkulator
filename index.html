@@ -406,6 +406,25 @@ function parseBetDescription(desc) {
         let teamRef = desc.replace(/asian\s*handicap|handicap|hdp/g, '').trim();
         return { market: 'handicap', selection: teamRef };
     }
+    if (desc.includes('draw no bet') || /\bdnb\b/.test(desc)) {
+        let teamRef = desc.replace(/draw no bet|dnb/g, '').trim();
+        let selection = null;
+        if (/\bhome\b/.test(teamRef)) selection = 'home';
+        else if (/\baway\b/.test(teamRef)) selection = 'away';
+        else selection = teamRef;
+        return { market: 'dnb', selection: selection };
+    }
+    if (desc.includes('double chance')) {
+        let selection = null;
+        if (/\b1x\b/.test(desc) || desc.includes('home/draw') || desc.includes('home or draw') || desc.includes('draw/home')) selection = '1x';
+        else if (/\bx2\b/.test(desc) || desc.includes('away/draw') || desc.includes('draw or away') || desc.includes('draw/away')) selection = 'x2';
+        else if (/\b12\b/.test(desc) || desc.includes('home/away') || desc.includes('home or away') || desc.includes('away/home')) selection = '12';
+        return { market: 'doublechance', selection: selection };
+    }
+    if (desc.includes('correct score')) {
+        let m = desc.match(/(\d+)\s*[-:]\s*(\d+)/);
+        return { market: 'correctscore', selection: m ? { h: parseInt(m[1], 10), a: parseInt(m[2], 10) } : null };
+    }
     if (desc.includes('1x2')) {
         let selection = null;
         if (/\bhome\b/.test(desc)) selection = 'home';
@@ -413,8 +432,13 @@ function parseBetDescription(desc) {
         else if (/\bdraw\b/.test(desc)) selection = 'draw';
         return { market: '1x2', selection: selection };
     }
-    if (desc.includes('over') || desc.includes('under')) {
-        let selection = desc.includes('over') ? 'over' : 'under';
+    if (/\bover\b/.test(desc) || /\bunder\b/.test(desc)) {
+        // Teks sering memuat nama pasaran "Over/Under" SEKALIGUS pilihan
+        // sebenarnya, mis. "Over/Under under 2.75". Ambil kata over/under
+        // TERAKHIR (paling dekat ke angka garis) karena itu pilihan asli,
+        // bukan sekadar kata pertama yang ditemukan.
+        let matches = desc.match(/\b(over|under)\b/g);
+        let selection = matches[matches.length - 1];
         return { market: 'ou', selection: selection };
     }
     if (desc.includes('both teams to score') || desc.includes('btts')) {
@@ -426,6 +450,12 @@ function parseBetDescription(desc) {
     if (/\bone team\b/.test(desc)) {
         return { market: 'btts', selection: 'one' };
     }
+    if (/\bodd\b/.test(desc) && !/\bodds\b/.test(desc)) {
+        return { market: 'oddeven', selection: 'odd' };
+    }
+    if (/\beven\b/.test(desc)) {
+        return { market: 'oddeven', selection: 'even' };
+    }
     return { market: 'unknown', selection: null };
 }
 
@@ -433,6 +463,23 @@ function parseBetLine(betLineRaw) {
     let oddsMatch = betLineRaw.match(/@\s*([\d.]+)\s*$/);
     let odds = oddsMatch ? parseFloat(oddsMatch[1]) : NaN;
     let withoutOdds = betLineRaw.replace(/@\s*[\d.]+\s*$/, '').trim();
+
+    // Deteksi dulu jenis pasarannya dari teks UTUH (sebelum angka garis dilepas).
+    // Ini penting karena beberapa pasaran memakai kode yang mengandung angka
+    // (mis. "1X"/"X2"/"12" pada Double Chance, atau "2-0" pada Correct Score) —
+    // kalau langsung dipotong pakai logika angka-garis Handicap/Over-Under,
+    // angka-angka itu akan salah kepotong dan pasarannya jadi tidak terbaca.
+    let preParsed = parseBetDescription(withoutOdds);
+    if (preParsed.market !== 'handicap' && preParsed.market !== 'ou') {
+        return {
+            odds: odds,
+            line: null,
+            market: preParsed.market,
+            selection: preParsed.selection,
+            description: withoutOdds
+        };
+    }
+
     // Lepas tanda kurung pembungkus angka garis, mis. "(-0.75)" -> "-0.75"
     withoutOdds = withoutOdds.replace(/\(\s*([+-]?[\d.]+)\s*\)\s*$/, '$1').trim();
     // Perhatikan tanda +/- di depan angka garis (penting untuk Handicap, mis. -0.75)
@@ -560,6 +607,36 @@ function determineLegResult(betInfo, homeGoals, awayGoals) {
         if (selection === 'neither') { let f = (homeGoals === 0 && awayGoals === 0) ? 1 : -1; return { result: factorToResult(f), factor: f, reasoning: "Both Teams To Score - Tidak. Skor " + homeGoals + "-" + awayGoals + " -> " + (f === 1 ? "tidak ada tim mencetak gol, MENANG." : "ada tim yang mencetak gol, KALAH.") }; }
         if (selection === 'one') { let f = ((homeGoals > 0) !== (awayGoals > 0)) ? 1 : -1; return { result: factorToResult(f), factor: f, reasoning: "Both Teams To Score - Hanya Satu. Skor " + homeGoals + "-" + awayGoals + " -> " + (f === 1 ? "hanya satu tim mencetak gol, MENANG." : "KALAH.") }; }
     }
+    if (market === 'dnb') {
+        if (homeGoals === awayGoals) {
+            return { result: 'push', factor: 0, reasoning: "Draw No Bet. Skor akhir seri (" + homeGoals + "-" + awayGoals + ") -> PUSH, seluruh Stake dikembalikan." };
+        }
+        if (!betInfo.side) return { result: 'unknown', factor: null, reasoning: null };
+        let teamLabel = betInfo.side === 'home' ? betInfo.teamHome : betInfo.teamAway;
+        let teamWon = betInfo.side === 'home' ? homeGoals > awayGoals : awayGoals > homeGoals;
+        let f = teamWon ? 1 : -1;
+        return { result: factorToResult(f), factor: f, reasoning: "Draw No Bet - " + teamLabel + ". Skor akhir " + homeGoals + "-" + awayGoals + " -> " + (f === 1 ? "MENANG." : "KALAH.") };
+    }
+    if (market === 'doublechance') {
+        let f;
+        if (selection === '1x') f = (homeGoals >= awayGoals) ? 1 : -1;
+        else if (selection === 'x2') f = (awayGoals >= homeGoals) ? 1 : -1;
+        else if (selection === '12') f = (homeGoals !== awayGoals) ? 1 : -1;
+        else return { result: 'unknown', factor: null, reasoning: null };
+        let label = selection === '1x' ? 'Home/Draw (1X)' : selection === 'x2' ? 'Away/Draw (X2)' : 'Home/Away (12)';
+        return { result: factorToResult(f), factor: f, reasoning: "Double Chance - " + label + ". Skor akhir " + homeGoals + "-" + awayGoals + " -> " + (f === 1 ? "MENANG." : "KALAH.") };
+    }
+    if (market === 'oddeven') {
+        let total = homeGoals + awayGoals;
+        let isOdd = total % 2 === 1;
+        let f = ((selection === 'odd' && isOdd) || (selection === 'even' && !isOdd)) ? 1 : -1;
+        return { result: factorToResult(f), factor: f, reasoning: "Total gol " + total + " adalah " + (isOdd ? "GANJIL" : "GENAP") + ", pilihan " + selection.toUpperCase() + " -> " + (f === 1 ? "MENANG." : "KALAH.") };
+    }
+    if (market === 'correctscore') {
+        if (!selection) return { result: 'unknown', factor: null, reasoning: null };
+        let f = (selection.h === homeGoals && selection.a === awayGoals) ? 1 : -1;
+        return { result: factorToResult(f), factor: f, reasoning: "Tebakan skor " + selection.h + "-" + selection.a + " dibanding skor akhir " + homeGoals + "-" + awayGoals + " -> " + (f === 1 ? "MENANG (skor tepat sama)." : "KALAH (skor tidak sama persis).") };
+    }
     return { result: 'unknown', factor: null, reasoning: null };
 }
 
@@ -584,6 +661,21 @@ function describeMarket(betInfo) {
                 (betInfo.selection === 'both' ? 'Ya, kedua tim mencetak gol' :
                  betInfo.selection === 'neither' ? 'Tidak ada tim mencetak gol' :
                  betInfo.selection === 'one' ? 'Hanya satu tim mencetak gol' : 'tidak dikenali');
+        case 'dnb': {
+            let sideLabel = betInfo.side === 'home' ? betInfo.teamHome :
+                            betInfo.side === 'away' ? betInfo.teamAway :
+                            '(tim tidak cocok dengan Home/Away, mohon cek manual: "' + betInfo.selection + '")';
+            return 'Draw No Bet - Tim: ' + sideLabel;
+        }
+        case 'doublechance':
+            return 'Double Chance - Pilihan: ' +
+                (betInfo.selection === '1x' ? 'Home/Draw (1X)' :
+                 betInfo.selection === 'x2' ? 'Away/Draw (X2)' :
+                 betInfo.selection === '12' ? 'Home/Away (12)' : 'tidak dikenali');
+        case 'oddeven':
+            return 'Odd/Even Total Gol - Pilihan: ' + (betInfo.selection === 'odd' ? 'Ganjil (Odd)' : 'Genap (Even)');
+        case 'correctscore':
+            return 'Correct Score - Tebakan: ' + (betInfo.selection ? (betInfo.selection.h + '-' + betInfo.selection.a) : 'tidak dikenali');
         default:
             return 'Pasaran tidak dikenali (' + betInfo.description + ')';
     }
@@ -601,7 +693,7 @@ function parseLeg(block) {
     let teamHome = teamMatch ? teamMatch[1].trim() : '(tim home)';
     let teamAway = teamMatch ? teamMatch[2].trim() : '(tim away)';
 
-    if (betInfo.market === 'handicap') {
+    if (betInfo.market === 'handicap' || betInfo.market === 'dnb') {
         let sel = betInfo.selection;
         let homeLower = teamHome.toLowerCase();
         let awayLower = teamAway.toLowerCase();
@@ -777,7 +869,7 @@ function hitungBetting(event) {
         let anyFullLose = legs.some(function(l) { return l.factor === -1; });
 
         if (anyUnknown) {
-            explanationText += "PERHATIAN: ada " + (isSingle ? "pasaran" : "leg dengan jenis pasaran") + " yang belum dikenali sistem (selain Asian Handicap / FT 1X2 / Over-Under / Both Teams To Score). Mohon verifikasi manual sebelum mempercayai status akhir.\n\n";
+            explanationText += "PERHATIAN: ada " + (isSingle ? "pasaran" : "leg dengan jenis pasaran") + " yang belum dikenali sistem (selain Asian Handicap / FT 1X2 / Over-Under / Both Teams To Score / Draw No Bet / Double Chance / Odd-Even / Correct Score). Mohon verifikasi manual sebelum mempercayai status akhir.\n\n";
         }
 
         if (anyUnknown) {
