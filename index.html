@@ -464,6 +464,22 @@ function parseBetLine(betLineRaw) {
     let odds = oddsMatch ? parseFloat(oddsMatch[1]) : NaN;
     let withoutOdds = betLineRaw.replace(/@\s*[\d.]+\s*$/, '').trim();
 
+    // Deteksi & lepas penanda BABAK (1H/2H/FT) di AWAL teks bet, SEBELUM
+    // parsing pasaran & tim. Ini WAJIB dilakukan lebih dulu karena kalau
+    // dibiarkan menempel, teks "1H"/"2H" akan ikut tercampur ke pilihan
+    // tim (mis. pada Handicap/Draw No Bet: "1H home" tidak akan cocok
+    // dengan nama tim manapun) sehingga sistem gagal mengenali sisi tim
+    // dan salah menandai taruhan sebagai "perlu cek manual".
+    let period = 'FT';
+    let periodMatch = withoutOdds.match(/^\s*(1h|1st\s*half|first\s*half|babak\s*1|babak\s*pertama|2h|2nd\s*half|second\s*half|babak\s*2|babak\s*kedua|ft|full\s*time|fulltime)\b\.?\s*/i);
+    if (periodMatch) {
+        let p = periodMatch[1].toLowerCase().replace(/\s+/g, '');
+        if (p === '1h' || p === '1sthalf' || p === 'firsthalf' || p === 'babak1' || p === 'babakpertama') period = '1H';
+        else if (p === '2h' || p === '2ndhalf' || p === 'secondhalf' || p === 'babak2' || p === 'babakkedua') period = '2H';
+        else period = 'FT';
+        withoutOdds = withoutOdds.slice(periodMatch[0].length).trim();
+    }
+
     // Deteksi dulu jenis pasarannya dari teks UTUH (sebelum angka garis dilepas).
     // Ini penting karena beberapa pasaran memakai kode yang mengandung angka
     // (mis. "1X"/"X2"/"12" pada Double Chance, atau "2-0" pada Correct Score) —
@@ -476,7 +492,8 @@ function parseBetLine(betLineRaw) {
             line: null,
             market: preParsed.market,
             selection: preParsed.selection,
-            description: withoutOdds
+            description: withoutOdds,
+            period: period
         };
     }
 
@@ -492,7 +509,8 @@ function parseBetLine(betLineRaw) {
         line: line,
         market: parsed.market,
         selection: parsed.selection,
-        description: withoutLine
+        description: withoutLine,
+        period: period
     };
 }
 
@@ -641,6 +659,11 @@ function determineLegResult(betInfo, homeGoals, awayGoals) {
 }
 
 function describeMarket(betInfo) {
+    let periodPrefix = (betInfo.period === '1H') ? '[1H] ' : (betInfo.period === '2H') ? '[2H] ' : '';
+    return periodPrefix + describeMarketBase(betInfo);
+}
+
+function describeMarketBase(betInfo) {
     switch (betInfo.market) {
         case 'handicap': {
             let sideLabel = betInfo.side === 'home' ? betInfo.teamHome :
@@ -685,11 +708,14 @@ function parseLeg(block) {
     let teamMatch = block.match(/^(.+?)\s+vs\.?\s+(.+)$/im);
     let betMatch = block.match(/bet:\s*(.+)/i);
     let ftMatch = block.match(/full\s*time\s*result:\s*(\d+)\s*:\s*(\d+)/i);
+    let htMatch = block.match(/half\s*time\s*result:\s*(\d+)\s*:\s*(\d+)/i);
     if (!betMatch || !ftMatch) return null;
 
     let betInfo = parseBetLine(betMatch[1].trim());
     let homeGoals = parseInt(ftMatch[1], 10);
     let awayGoals = parseInt(ftMatch[2], 10);
+    let htHomeGoals = htMatch ? parseInt(htMatch[1], 10) : null;
+    let htAwayGoals = htMatch ? parseInt(htMatch[2], 10) : null;
     let teamHome = teamMatch ? teamMatch[1].trim() : '(tim home)';
     let teamAway = teamMatch ? teamMatch[2].trim() : '(tim away)';
 
@@ -706,9 +732,48 @@ function parseLeg(block) {
         betInfo.teamAway = teamAway;
     }
 
-    let resultInfo = determineLegResult(betInfo, homeGoals, awayGoals);
+    // --------------------------------------------------------
+    // Pilih skor yang dipakai untuk menentukan MENANG/KALAH
+    // sesuai BABAK taruhan (1H/2H/FT). Bet "1H" (babak pertama)
+    // HARUS dicocokkan dengan Half Time Result, bukan Full Time
+    // Result — begitu juga "2H" (babak kedua) harus dicocokkan
+    // dengan selisih Full Time - Half Time. Kalau data babak yang
+    // dibutuhkan tidak tersedia di Details, jangan menebak: tandai
+    // "perlu cek manual" supaya tidak salah klaim menang/kalah.
+    // --------------------------------------------------------
+    let periodGoals = { home: homeGoals, away: awayGoals };
+    let periodNote = null;
+    let periodUnknown = false;
 
-    return { teamHome: teamHome, teamAway: teamAway, betInfo: betInfo, homeGoals: homeGoals, awayGoals: awayGoals, result: resultInfo.result, factor: resultInfo.factor, reasoning: resultInfo.reasoning };
+    if (betInfo.period === '1H') {
+        if (htMatch) {
+            periodGoals = { home: htHomeGoals, away: htAwayGoals };
+            periodNote = "Bet ini pasaran BABAK PERTAMA (1H). Skor yang dipakai adalah Half Time Result " + htHomeGoals + "-" + htAwayGoals + " (BUKAN Full Time " + homeGoals + "-" + awayGoals + ").";
+        } else {
+            periodUnknown = true;
+            periodNote = "Bet ini pasaran BABAK PERTAMA (1H) tapi 'Half time result' tidak ditemukan pada Details, sehingga tidak bisa dihitung akurat.";
+        }
+    } else if (betInfo.period === '2H') {
+        if (htMatch) {
+            periodGoals = { home: homeGoals - htHomeGoals, away: awayGoals - htAwayGoals };
+            periodNote = "Bet ini pasaran BABAK KEDUA (2H). Skor babak kedua = Full Time - Half Time = " + periodGoals.home + "-" + periodGoals.away + " (Full Time " + homeGoals + "-" + awayGoals + ", Half Time " + htHomeGoals + "-" + htAwayGoals + ").";
+        } else {
+            periodUnknown = true;
+            periodNote = "Bet ini pasaran BABAK KEDUA (2H) tapi 'Half time result' tidak ditemukan pada Details, sehingga skor babak kedua tidak bisa dihitung akurat.";
+        }
+    }
+
+    let resultInfo;
+    if (periodUnknown) {
+        resultInfo = { result: 'unknown', factor: null, reasoning: periodNote };
+    } else {
+        resultInfo = determineLegResult(betInfo, periodGoals.home, periodGoals.away);
+        if (periodNote) {
+            resultInfo = { result: resultInfo.result, factor: resultInfo.factor, reasoning: periodNote + (resultInfo.reasoning ? "\n" + resultInfo.reasoning : "") };
+        }
+    }
+
+    return { teamHome: teamHome, teamAway: teamAway, betInfo: betInfo, homeGoals: homeGoals, awayGoals: awayGoals, htHomeGoals: htHomeGoals, htAwayGoals: htAwayGoals, result: resultInfo.result, factor: resultInfo.factor, reasoning: resultInfo.reasoning };
 }
 
 function parseBetSlip(text) {
@@ -857,6 +922,9 @@ function hitungBetting(event) {
         legs.forEach(function(l, i) {
             explanationText += (isSingle ? "" : (i + 1) + ". ") + l.teamHome + " vs " + l.teamAway + "\n";
             explanationText += "   Pasaran   : " + describeMarket(l.betInfo) + " @" + formatNumber(l.betInfo.odds) + "\n";
+            if (l.htHomeGoals !== null && l.htAwayGoals !== null) {
+                explanationText += "   Skor HT   : " + l.htHomeGoals + " - " + l.htAwayGoals + "\n";
+            }
             explanationText += "   Skor FT   : " + l.homeGoals + " - " + l.awayGoals + "\n";
             explanationText += "   Hasil     : " + statusLabel(l.factor === undefined ? null : l.factor) + "\n";
             if (l.reasoning) {
@@ -927,7 +995,8 @@ function hitungBetting(event) {
     document.getElementById('res-total-kemenangan').textContent = formatNumber(payout.totalKemenangan);
     document.getElementById('res-actual-stake').textContent = formatNumber(stake);
     document.getElementById('res-stake').textContent = formatNumber(stake);
-    document.getElementById('res-odds').textContent = (odds > 0 ? '+' : '') + formatNumber(odds);
+    let oddsIsAmerican = Math.abs(odds) >= 100;
+    document.getElementById('res-odds').textContent = (oddsIsAmerican && odds > 0 ? '+' : '') + formatNumber(odds);
 
     let statusElem = document.getElementById('res-status');
     statusElem.textContent = statusLabel(factor);
