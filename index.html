@@ -1,122 +1,583 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulasi Gemini API di HTML</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-            background-color: #f9f9f9;
-            color: #333;
-        }
-        h2 {
-            color: #1a73e8;
-        }
-        .container {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        input[type="text"] {
-            width: calc(100% - 90px);
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            outline: none;
-        }
-        button {
-            width: 80px;
-            padding: 10px;
-            font-size: 14px;
-            background-color: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-        button:hover {
-            background-color: #1557b0;
-        }
-        .result-box {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f1f3f4;
-            min-height: 80px;
-            white-space: pre-wrap;
-            line-height: 1.5;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Dashboard Kalkulator Betting Otomatis</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-deep: #0a0d1a;
+  --bg-mid: #12162a;
+  --surface: #161b31;
+  --surface-alt: #1c2138;
+  --border: rgba(255,255,255,0.08);
+  --border-soft: rgba(255,255,255,0.05);
+  --text-primary: #f5f3f8;
+  --text-muted: #9297b3;
+  --rose: #f3a6cf;
+  --lime: #dbf500;
+  --lime-dim: rgba(219,245,0,0.15);
+  --violet: #a78bfa;
+  --violet-dim: rgba(167,139,250,0.15);
+  --win: #3ce6a0;
+  --lose: #fb7189;
+  --shadow: 0 20px 60px rgba(0,0,0,0.45);
+  --gold-light: #f6e7a8;
+  --gold: #d9b45a;
+  --gold-deep: #a7782c;
+  --gold-dim: rgba(217,180,90,0.15);
+  --gold-gradient: linear-gradient(120deg, var(--gold-light) 0%, var(--gold) 45%, var(--gold-deep) 100%);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: radial-gradient(1200px 600px at 15% -10%, #1b1440 0%, transparent 60%),
+              radial-gradient(1000px 500px at 110% 10%, #101c3a 0%, transparent 55%),
+              linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 100%);
+  background-attachment: fixed;
+  margin: 0;
+  padding: 40px 20px;
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-mid) 100%);
+  padding: 36px 40px 44px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--gold-gradient);
+  box-shadow: 0 0 14px rgba(217,180,90,0.5);
+}
+
+.container::after {
+  content: "";
+  position: absolute;
+  bottom: -60px; right: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,180,90,0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.gold-wave {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.55;
+  z-index: 0;
+}
+.gold-wave.top-left { top: -18px; left: -18px; width: 260px; }
+.gold-wave.bottom-right { bottom: -18px; right: -18px; width: 260px; transform: rotate(180deg); }
+
+.container > * { position: relative; z-index: 1; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  background: rgba(217,180,90,0.08);
+  border: 1px solid rgba(217,180,90,0.35);
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+.eyebrow::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+}
+
+h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 2.4vw, 30px);
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+  padding-bottom: 20px;
+  margin: 0 0 28px;
+  letter-spacing: -0.01em;
+  filter: drop-shadow(0 0 18px rgba(217,180,90,0.18));
+}
+h2::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 100%; height: 8px;
+  background:
+    linear-gradient(90deg, transparent 0%, var(--gold) 100%) bottom / 100% 1px no-repeat,
+    radial-gradient(circle at 0 0, var(--gold-light) 0 3px, transparent 4px) left bottom no-repeat;
+  opacity: 0.9;
+}
+
+h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+h3::before {
+  content: "";
+  width: 4px; height: 18px;
+  border-radius: 2px;
+  background: var(--gold-gradient);
+  box-shadow: 0 0 10px rgba(217,180,90,0.5);
+  display: inline-block;
+}
+
+.form-group { margin-bottom: 20px; }
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--gold-light);
+}
+
+input[type="number"], textarea {
+  width: 100%;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+input[type="number"]::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+input[type="number"]:focus, textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: rgba(217,180,90,0.06);
+  box-shadow: 0 0 0 3px var(--gold-dim);
+}
+
+textarea { height: 120px; resize: vertical; }
+
+button {
+  background: var(--gold-gradient);
+  color: #1c1608;
+  border: none;
+  padding: 13px 26px;
+  cursor: pointer;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 24px rgba(217,180,90,0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+button:hover { filter: brightness(1.08); box-shadow: 0 10px 30px rgba(217,180,90,0.35); transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 20px;
+  overflow-x: auto;
+  display: block;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+th, td {
+  border-bottom: 1px solid var(--border-soft);
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 13px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+th {
+  background: var(--surface-alt);
+  color: var(--gold-light);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(217,180,90,0.25);
+}
+
+td { background: rgba(255,255,255,0.015); color: var(--text-primary); }
+tbody tr:last-child td { border-bottom: none; }
+
+.win { color: var(--win); font-weight: 700; text-shadow: 0 0 12px rgba(60,230,160,0.25); }
+.lose { color: var(--lose); font-weight: 700; text-shadow: 0 0 12px rgba(251,113,137,0.2); }
+
+#result-section { display: none; margin-top: 34px; }
+
+.explanation-box { margin-top: 20px; }
+.explanation-box textarea {
+  background: #0d1022;
+  color: #c9cee8;
+  height: 260px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  border-color: rgba(217,180,90,0.2);
+}
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>Tanya Gemini AI</h2>
-        <p>Ketik pertanyaan Anda di bawah ini:</p>
-        
-        <div style="display: flex;">
-            <input type="text" id="userPrompt" placeholder="Contoh: Apa resep nasi goreng sederhana?">
-            <button onclick="kirimKeGemini()">Kirim</button>
-        </div>
-        
-        <p style="margin-top: 20px;"><strong>Jawaban:</strong></p>
-        <div id="hasilResponse" class="result-box">Hasil jawaban akan muncul di sini...</div>
-    </div>
+<div class="container">
+<svg class="gold-wave top-left" viewBox="0 0 260 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 90 C 60 20, 120 130, 180 55 S 260 10, 260 10" stroke="url(#goldWaveGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="goldWaveGrad" x1="0" y1="0" x2="260" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f6e7a8"/>
+      <stop offset="0.5" stop-color="#d9b45a"/>
+      <stop offset="1" stop-color="#a7782c"/>
+    </linearGradient>
+  </defs>
+</svg>
+<svg class="gold-wave bottom-right" viewBox="0 0 260 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 90 C 60 20, 120 130, 180 55 S 260 10, 260 10" stroke="url(#goldWaveGrad2)" stroke-width="2.5" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="goldWaveGrad2" x1="0" y1="0" x2="260" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f6e7a8"/>
+      <stop offset="0.5" stop-color="#d9b45a"/>
+      <stop offset="1" stop-color="#a7782c"/>
+    </linearGradient>
+  </defs>
+</svg>
+<span class="eyebrow">SMB Group · Betting Engine</span>
+<h2>Dashboard Input & Kalkulator Betting Manual</h2>
 
-    <script>
-        async function kirimKeGemini() {
-            const prompt = document.getElementById('userPrompt').value.trim();
-            const hasilDiv = document.getElementById('hasilResponse');
-            
-            if (!prompt) {
-                alert("Mohon masukkan pertanyaan terlebih dahulu!");
-                return;
+<!-- Form Input -->
+<form id="betForm" onsubmit="hitungBetting(event)">
+<div class="form-group">
+<label>Details Pertandingan:</label>
+<textarea id="details" required placeholder="Masukkan detail taruhan di sini..."></textarea>
+</div>
+
+<div class="form-group">
+<label>Stake:</label>
+<input type="number" step="any" id="stake" required placeholder="Contoh: 100">
+</div>
+
+<div class="form-group">
+<label>Odds:</label>
+<input type="number" step="any" id="odds" required placeholder="Contoh: 1.85">
+</div>
+
+<button type="submit">Proses & Hitung</button>
+</form>
+
+<!-- Tabel Hasil Output -->
+<div id="result-section">
+<h3>Hasil Kalkulasi Dashboard:</h3>
+<table>
+<thead>
+<tr>
+<th>Details</th>
+<th>Total Kemenangan</th>
+<th>Actual Stake</th>
+<th>Stake</th>
+<th>Win & Lose</th>
+<th>Odds</th>
+<th>Ip</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><pre id="res-details" style="margin:0; font-family:inherit; white-space: pre-wrap;"></pre></td>
+<td id="res-total-kemenangan"></td>
+<td id="res-actual-stake"></td>
+<td id="res-stake"></td>
+<td id="res-win-lose"></td>
+<td id="res-odds"></td>
+<td>-</td>
+<td id="res-status"></td>
+</tr>
+</tbody>
+</table>
+
+<!-- Kotak Penjelasan -->
+<div class="form-group explanation-box">
+<label for="res-explanation">Penjelasan:</label>
+<textarea id="res-explanation" placeholder="Penjelasan kalkulasi atau catatan status akan muncul otomatis di sini..."></textarea>
+</div>
+</div>
+
+</div>
+
+<script>
+function formatNumber(num) {
+    return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ============================================================
+// BAGIAN 1: PARSER SLIP TARUHAN MULTI-LEG (PARLAY / MIX PARLAY)
+// ============================================================
+function parseBetDescription(desc) {
+    desc = desc.toLowerCase();
+    if (desc.includes('1x2')) {
+        let selection = null;
+        if (/\bhome\b/.test(desc)) selection = 'home';
+        else if (/\baway\b/.test(desc)) selection = 'away';
+        else if (/\bdraw\b/.test(desc)) selection = 'draw';
+        return { market: '1x2', selection: selection };
+    }
+    if (desc.includes('over') || desc.includes('under')) {
+        let selection = desc.includes('over') ? 'over' : 'under';
+        return { market: 'ou', selection: selection };
+    }
+    if (desc.includes('both teams to score') || desc.includes('btts')) {
+        return { market: 'btts', selection: 'both' };
+    }
+    if (desc.includes('neither')) {
+        return { market: 'btts', selection: 'neither' };
+    }
+    if (/\bone team\b/.test(desc)) {
+        return { market: 'btts', selection: 'one' };
+    }
+    return { market: 'unknown', selection: null };
+}
+
+function parseBetLine(betLineRaw) {
+    let oddsMatch = betLineRaw.match(/@\s*([\d.]+)\s*$/);
+    let odds = oddsMatch ? parseFloat(oddsMatch[1]) : NaN;
+    let withoutOdds = betLineRaw.replace(/@\s*[\d.]+\s*$/, '').trim();
+    let lineMatch = withoutOdds.match(/([\d.]+)\s*$/);
+    let line = lineMatch ? parseFloat(lineMatch[1]) : null;
+    let withoutLine = lineMatch ? withoutOdds.slice(0, lineMatch.index).trim() : withoutOdds;
+    let parsed = parseBetDescription(withoutLine);
+    return {
+        odds: odds,
+        line: line,
+        market: parsed.market,
+        selection: parsed.selection,
+        description: withoutLine
+    };
+}
+
+function determineLegResult(betInfo, homeGoals, awayGoals) {
+    let market = betInfo.market, selection = betInfo.selection, line = betInfo.line;
+    if (market === '1x2') {
+        if (selection === 'home') return homeGoals > awayGoals ? 'win' : 'lose';
+        if (selection === 'away') return awayGoals > homeGoals ? 'win' : 'lose';
+        if (selection === 'draw') return homeGoals === awayGoals ? 'win' : 'lose';
+    }
+    if (market === 'ou') {
+        let total = homeGoals + awayGoals;
+        if (selection === 'over') return total > line ? 'win' : (total === line ? 'push' : 'lose');
+        if (selection === 'under') return total < line ? 'win' : (total === line ? 'push' : 'lose');
+    }
+    if (market === 'btts') {
+        if (selection === 'both') return (homeGoals > 0 && awayGoals > 0) ? 'win' : 'lose';
+        if (selection === 'neither') return (homeGoals === 0 && awayGoals === 0) ? 'win' : 'lose';
+        if (selection === 'one') return ((homeGoals > 0) !== (awayGoals > 0)) ? 'win' : 'lose';
+    }
+    return 'unknown';
+}
+
+function describeMarket(betInfo) {
+    switch (betInfo.market) {
+        case '1x2':
+            return 'FT 1X2 - Pilihan: ' +
+                (betInfo.selection === 'home' ? 'Home Menang' :
+                 betInfo.selection === 'away' ? 'Away Menang' :
+                 betInfo.selection === 'draw' ? 'Seri (Draw)' : 'tidak dikenali');
+        case 'ou':
+            return 'Over/Under - Pilihan: ' + (betInfo.selection === 'over' ? 'Over ' : 'Under ') + formatNumber(betInfo.line) + ' gol';
+        case 'btts':
+            return 'Both Teams To Score - Pilihan: ' +
+                (betInfo.selection === 'both' ? 'Ya, kedua tim mencetak gol' :
+                 betInfo.selection === 'neither' ? 'Tidak ada tim mencetak gol' :
+                 betInfo.selection === 'one' ? 'Hanya satu tim mencetak gol' : 'tidak dikenali');
+        default:
+            return 'Pasaran tidak dikenali (' + betInfo.description + ')';
+    }
+}
+
+function parseLeg(block) {
+    let teamMatch = block.match(/^(.+?)\s+vs\.?\s+(.+)$/im);
+    let betMatch = block.match(/bet:\s*(.+)/i);
+    let ftMatch = block.match(/full\s*time\s*result:\s*(\d+)\s*:\s*(\d+)/i);
+    if (!betMatch || !ftMatch) return null;
+
+    let betInfo = parseBetLine(betMatch[1].trim());
+    let homeGoals = parseInt(ftMatch[1], 10);
+    let awayGoals = parseInt(ftMatch[2], 10);
+    let teamHome = teamMatch ? teamMatch[1].trim() : '(tim home)';
+    let teamAway = teamMatch ? teamMatch[2].trim() : '(tim away)';
+    let result = determineLegResult(betInfo, homeGoals, awayGoals);
+
+    return { teamHome: teamHome, teamAway: teamAway, betInfo: betInfo, homeGoals: homeGoals, awayGoals: awayGoals, result: result };
+}
+
+function parseBetSlip(text) {
+    let blocks = text.split(/\n\s*\n+/).map(function(b) { return b.trim(); }).filter(Boolean);
+    let legs = [];
+    blocks.forEach(function(b) {
+        let leg = parseLeg(b);
+        if (leg) legs.push(leg);
+    });
+    return legs;
+}
+
+// ============================================================
+// BAGIAN 2: DETEKSI SEDERHANA (fallback teks bebas)
+// ============================================================
+function containsWord(text, words) {
+    return words.some(function(w) {
+        let re = new RegExp('\\b' + w + '\\b', 'i');
+        return re.test(text);
+    });
+}
+
+function detectStatusFromKeywords(details) {
+    let winWords = ["won", "win", "menang", "unggul"];
+    let loseWords = ["lose", "lost", "kalah"];
+    let isWin = containsWord(details, winWords);
+    let isLose = containsWord(details, loseWords);
+
+    if (isWin && !isLose) {
+        return { status: "won", note: "Status MENANG terdeteksi dari kata kunci kemenangan pada Details." };
+    } else if (isLose && !isWin) {
+        return { status: "lose", note: "Status KALAH terdeteksi dari kata kunci kekalahan pada Details." };
+    } else if (isWin && isLose) {
+        return { status: "lose", note: "Details mengandung kata kunci menang dan kalah sekaligus. Status di-default-kan ke KALAH." };
+    } else {
+        return { status: "lose", note: "Tidak ditemukan kata kunci menang/kalah yang jelas. Status di-default-kan ke KALAH." };
+    }
+}
+
+// ============================================================
+// BAGIAN 3: PERHITUNGAN PEMBAYARAN
+// ============================================================
+function calcPayout(stake, odds, status) {
+    let winLose = 0, totalKemenangan = 0, explanationText = "";
+
+    if (status === 'won') {
+        let isAmerican = Math.abs(odds) >= 100;
+        if (isAmerican) {
+            if (odds > 0) {
+                winLose = stake * (odds / 100);
+            } else {
+                winLose = stake * (100 / Math.abs(odds));
             }
-            
-            // Masukkan Gemini API Key Anda yang valid di antara tanda kutip di bawah ini
-            const apiKey = "AIzaSyB2cUv1UQXiD_4XyNRtX2mfENEUJd6vYks"; 
-            
-            // Menggunakan model gemini-1.5-flash yang aktif
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-            hasilDiv.innerText = "Sedang memproses...";
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{ text: prompt }]
-                        }]
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.candidates && data.candidates.length > 0) {
-                    const teksJawaban = data.candidates[0].content.parts[0].text;
-                    hasilDiv.innerText = teksJawaban;
-                } else if (data.error) {
-                    hasilDiv.innerText = "Error dari API: " + data.error.message;
-                } else {
-                    hasilDiv.innerText = "Terjadi kesalahan format data: " + JSON.stringify(data);
-                }
-            } catch (error) {
-                hasilDiv.innerText = "Gagal terhubung ke jaringan: " + error.message;
-            }
+            totalKemenangan = stake + winLose;
+        } else {
+            winLose = stake * (odds - 1);
+            totalKemenangan = stake * odds;
         }
-    </script>
+        explanationText += "Taruhan Menang.\nTotal Kemenangan = " + formatNumber(totalKemenangan) + "\nKeuntungan = " + formatNumber(winLose);
+    } else {
+        winLose = -stake;
+        totalKemenangan = 0;
+        explanationText += "Karena taruhan KALAH, seluruh Stake hilang.\nWin/Lose = -" + formatNumber(stake) + "\nTotal Kemenangan = 0";
+    }
+    return { winLose: winLose, totalKemenangan: totalKemenangan, explanationText: explanationText };
+}
+
+// ============================================================
+// BAGIAN 4: HANDLER UTAMA
+// ============================================================
+function hitungBetting(event) {
+    event.preventDefault();
+
+    let details = document.getElementById('details').value;
+    let stake = parseFloat(document.getElementById('stake').value);
+    let odds = parseFloat(document.getElementById('odds').value);
+
+    if (isNaN(stake) || stake <= 0) {
+        alert("Stake harus berupa angka lebih besar dari 0.");
+        return;
+    }
+    if (isNaN(odds) || odds === 0) {
+        alert("Odds harus diisi dengan angka dan tidak boleh 0.");
+        return;
+    }
+
+    let status = "lose";
+    let explanationText = "";
+    let legs = parseBetSlip(details);
+
+    if (legs.length > 0) {
+        let isSingle = legs.length === 1;
+        legs.forEach(function(l, i) {
+            explanationText += (isSingle ? "" : (i + 1) + ". ") + l.teamHome + " vs " + l.teamAway + "\n";
+            explanationText += "   Pasaran   : " + describeMarket(l.betInfo) + " @" + formatNumber(l.betInfo.odds) + "\n";
+            explanationText += "   Skor FT   : " + l.homeGoals + " - " + l.awayGoals + "\n";
+            explanationText += "   Hasil     : " + (l.result === 'win' ? 'MENANG' : l.result === 'lose' ? 'KALAH' : 'SERI/PUSH') + "\n\n";
+        });
+
+        let anyLose = legs.some(function(l) { return l.result === 'lose'; });
+        let anyUnknown = legs.some(function(l) { return l.result === 'unknown'; });
+        status = (anyLose || anyUnknown) ? "lose" : "won";
+    } else {
+        let detected = detectStatusFromKeywords(details);
+        status = detected.status;
+        explanationText += detected.note + "\n\n";
+    }
+
+    let payout = calcPayout(stake, odds, status);
+    explanationText += "\n" + payout.explanationText;
+
+    document.getElementById('res-details').textContent = details;
+    document.getElementById('res-total-kemenangan').textContent = formatNumber(payout.totalKemenangan);
+    document.getElementById('res-actual-stake').textContent = formatNumber(stake);
+    document.getElementById('res-stake').textContent = formatNumber(stake);
+    document.getElementById('res-odds').textContent = (odds > 0 ? '+' : '') + formatNumber(odds);
+
+    let statusElem = document.getElementById('res-status');
+    statusElem.textContent = status.toUpperCase();
+    statusElem.className = status === 'won' ? 'win' : 'lose';
+
+    let winLoseElem = document.getElementById('res-win-lose');
+    let formattedWinLose = (payout.winLose > 0 ? '+' : '') + formatNumber(payout.winLose);
+    winLoseElem.textContent = formattedWinLose;
+    winLoseElem.className = payout.winLose >= 0 ? 'win' : 'lose';
+
+    document.getElementById('res-explanation').value = explanationText;
+    document.getElementById('result-section').style.display = 'block';
+}
+</script>
 
 </body>
 </html>
