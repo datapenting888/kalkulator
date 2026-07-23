@@ -572,20 +572,24 @@ function hitungBetting(event) {
     let legs = parseBetSlip(details);
 
     if (legs.length > 0) {
-        explanationText += "Terdeteksi " + legs.length + " leg pertandingan (parlay/mix parlay):\n\n";
+        let isSingle = legs.length === 1;
+
+        explanationText += isSingle
+            ? "Terdeteksi taruhan SINGLE (1 pertandingan):\n\n"
+            : "Terdeteksi " + legs.length + " leg pertandingan (parlay/mix parlay):\n\n";
 
         legs.forEach(function(l, i) {
-            explanationText += (i + 1) + ". " + l.teamHome + " vs " + l.teamAway + "\n";
+            explanationText += (isSingle ? "" : (i + 1) + ". ") + l.teamHome + " vs " + l.teamAway + "\n";
             explanationText += "   Pasaran   : " + describeMarket(l.betInfo) + " @" + formatNumber(l.betInfo.odds) + "\n";
             explanationText += "   Skor FT   : " + l.homeGoals + " - " + l.awayGoals + "\n";
-            explanationText += "   Hasil leg : " + (l.result === 'win' ? 'MENANG' : l.result === 'lose' ? 'KALAH' : l.result === 'push' ? 'SERI/PUSH' : 'TIDAK DIKENALI (perlu cek manual)') + "\n\n";
+            explanationText += "   Hasil     : " + (l.result === 'win' ? 'MENANG' : l.result === 'lose' ? 'KALAH' : l.result === 'push' ? 'SERI/PUSH' : 'TIDAK DIKENALI (perlu cek manual)') + "\n\n";
         });
 
         let anyLose = legs.some(function(l) { return l.result === 'lose'; });
         let anyUnknown = legs.some(function(l) { return l.result === 'unknown'; });
 
         if (anyUnknown) {
-            explanationText += "PERHATIAN: ada leg dengan jenis pasaran yang belum dikenali sistem (selain FT 1X2 / Over-Under / Both Teams To Score). Mohon verifikasi manual leg tersebut sebelum mempercayai status akhir.\n\n";
+            explanationText += "PERHATIAN: ada " + (isSingle ? "pasaran" : "leg dengan jenis pasaran") + " yang belum dikenali sistem (selain FT 1X2 / Over-Under / Both Teams To Score). Mohon verifikasi manual sebelum mempercayai status akhir.\n\n";
         }
 
         status = (anyLose || anyUnknown) ? "lose" : "won";
@@ -594,13 +598,23 @@ function hitungBetting(event) {
             return l.result === 'push' ? acc : acc * l.betInfo.odds;
         }, 1);
 
-        explanationText += "Karena ini taruhan gabungan (parlay/mix parlay), SEMUA leg harus MENANG agar keseluruhan taruhan menang.\n";
-        explanationText += "Odds gabungan hasil kali tiap leg (cross-check) = " + formatNumber(computedCombinedOdds) + "\n";
-        explanationText += "Odds yang Anda masukkan di form           = " + formatNumber(odds) + "\n";
-        if (Math.abs(computedCombinedOdds - odds) > Math.max(0.01, computedCombinedOdds * 0.02)) {
-            explanationText += "Catatan: ada selisih antara odds gabungan hasil parsing dan odds yang Anda masukkan, mohon cek ulang.\n";
+        if (isSingle) {
+            explanationText += "Karena ini taruhan SINGLE (hanya 1 pertandingan), status taruhan langsung mengikuti hasil pertandingan tersebut.\n";
+            explanationText += "Odds pertandingan (cross-check) = " + formatNumber(computedCombinedOdds) + "\n";
+            explanationText += "Odds yang Anda masukkan di form = " + formatNumber(odds) + "\n";
+            if (Math.abs(computedCombinedOdds - odds) > Math.max(0.01, computedCombinedOdds * 0.02)) {
+                explanationText += "Catatan: ada selisih antara odds hasil parsing dan odds yang Anda masukkan, mohon cek ulang.\n";
+            }
+            explanationText += "\nStatus: " + (status === 'won' ? 'MENANG' : 'KALAH') + "\n\n";
+        } else {
+            explanationText += "Karena ini taruhan gabungan (parlay/mix parlay), SEMUA leg harus MENANG agar keseluruhan taruhan menang.\n";
+            explanationText += "Odds gabungan hasil kali tiap leg (cross-check) = " + formatNumber(computedCombinedOdds) + "\n";
+            explanationText += "Odds yang Anda masukkan di form           = " + formatNumber(odds) + "\n";
+            if (Math.abs(computedCombinedOdds - odds) > Math.max(0.01, computedCombinedOdds * 0.02)) {
+                explanationText += "Catatan: ada selisih antara odds gabungan hasil parsing dan odds yang Anda masukkan, mohon cek ulang.\n";
+            }
+            explanationText += "\nStatus keseluruhan: " + (status === 'won' ? 'MENANG' : 'KALAH') + "\n\n";
         }
-        explanationText += "\nStatus keseluruhan: " + (status === 'won' ? 'MENANG' : 'KALAH') + "\n\n";
 
     } else {
         let detected = detectStatusFromKeywords(details);
