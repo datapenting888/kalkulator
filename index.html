@@ -351,11 +351,24 @@ function formatNumber(num) {
 }
 
 // ============================================================
-// FUNGSI UTAMA KALKULATOR - AKURAT UNTUK SEMUA JENIS TARUHAN
+// PARSER SLIP TARUHAN - SUPPORT Over/Under, Handicap, 1X2, BTTS
 // ============================================================
 
 function parseBetDescription(desc) {
     desc = desc.toLowerCase();
+    
+    // HANDICAP (Asian Handicap)
+    if (desc.includes('handicap')) {
+        let isHome = desc.includes('home');
+        let isAway = desc.includes('away');
+        let selection = isHome ? 'home' : (isAway ? 'away' : null);
+        
+        // Parse handicap value (e.g., -0.5, +0.25, -1.75)
+        let handicapMatch = desc.match(/([+-]?\d+\.?\d*)/);
+        let handicapValue = handicapMatch ? parseFloat(handicapMatch[1]) : 0;
+        
+        return { market: 'handicap', selection: selection, handicap: handicapValue };
+    }
     
     // 1X2
     if (desc.includes('1x2')) {
@@ -369,7 +382,10 @@ function parseBetDescription(desc) {
     // Over/Under
     if (desc.includes('over') || desc.includes('under')) {
         let selection = desc.includes('over') ? 'over' : 'under';
-        return { market: 'ou', selection: selection };
+        // Parse line value (e.g., 2.75, 2.5, 3.0)
+        let lineMatch = desc.match(/(\d+\.?\d*)/);
+        let line = lineMatch ? parseFloat(lineMatch[1]) : null;
+        return { market: 'ou', selection: selection, line: line };
     }
     
     // Both Teams To Score
@@ -392,34 +408,66 @@ function parseBetLine(betLineRaw) {
     let oddsMatch = betLineRaw.match(/@\s*([\d.]+)\s*$/);
     let odds = oddsMatch ? parseFloat(oddsMatch[1]) : NaN;
     let withoutOdds = betLineRaw.replace(/@\s*[\d.]+\s*$/, '').trim();
-    let lineMatch = withoutOdds.match(/([\d.]+)\s*$/);
-    let line = lineMatch ? parseFloat(lineMatch[1]) : null;
-    let withoutLine = lineMatch ? withoutOdds.slice(0, lineMatch.index).trim() : withoutOdds;
-    let parsed = parseBetDescription(withoutLine);
+    let parsed = parseBetDescription(withoutOdds);
     return {
         odds: odds,
-        line: line,
         market: parsed.market,
         selection: parsed.selection,
-        description: withoutLine
+        line: parsed.line || null,
+        handicap: parsed.handicap || null,
+        description: withoutOdds
     };
 }
 
+// ============================================================
+// MENENTUKAN HASIL LEG - AKURAT UNTUK OVER/UNDER, HANDICAP, dll
+// ============================================================
+
 function determineLegResult(betInfo, homeGoals, awayGoals) {
-    let market = betInfo.market, selection = betInfo.selection, line = betInfo.line;
+    let market = betInfo.market, selection = betInfo.selection;
+    let line = betInfo.line;
+    let handicap = betInfo.handicap;
     
+    // 1X2
     if (market === '1x2') {
         if (selection === 'home') return homeGoals > awayGoals ? 'win' : 'lose';
         if (selection === 'away') return awayGoals > homeGoals ? 'win' : 'lose';
         if (selection === 'draw') return homeGoals === awayGoals ? 'win' : 'lose';
     }
     
+    // OVER / UNDER - AKURAT!
     if (market === 'ou') {
         let total = homeGoals + awayGoals;
-        if (selection === 'over') return total > line ? 'win' : (total === line ? 'push' : 'lose');
-        if (selection === 'under') return total < line ? 'win' : (total === line ? 'push' : 'lose');
+        if (selection === 'over') {
+            if (total > line) return 'win';
+            if (total === line) return 'push';
+            return 'lose';
+        }
+        if (selection === 'under') {
+            if (total < line) return 'win';
+            if (total === line) return 'push';
+            return 'lose';
+        }
     }
     
+    // HANDICAP - AKURAT!
+    if (market === 'handicap') {
+        let margin = homeGoals - awayGoals;
+        let adjustedMargin = margin - handicap;
+        
+        if (selection === 'home') {
+            if (adjustedMargin > 0) return 'win';
+            if (adjustedMargin === 0) return 'push';
+            return 'lose';
+        }
+        if (selection === 'away') {
+            if (adjustedMargin < 0) return 'win';
+            if (adjustedMargin === 0) return 'push';
+            return 'lose';
+        }
+    }
+    
+    // BTTS
     if (market === 'btts') {
         if (selection === 'both') return (homeGoals > 0 && awayGoals > 0) ? 'win' : 'lose';
         if (selection === 'neither') return (homeGoals === 0 && awayGoals === 0) ? 'win' : 'lose';
@@ -433,6 +481,7 @@ function parseLeg(block) {
     let teamMatch = block.match(/^(.+?)\s+vs\.?\s+(.+)$/im);
     let betMatch = block.match(/bet:\s*(.+)/i);
     let ftMatch = block.match(/full\s*time\s*result:\s*(\d+)\s*:\s*(\d+)/i);
+    
     if (!betMatch || !ftMatch) return null;
 
     let betInfo = parseBetLine(betMatch[1].trim());
@@ -442,7 +491,14 @@ function parseLeg(block) {
     let teamAway = teamMatch ? teamMatch[2].trim() : '(tim away)';
     let result = determineLegResult(betInfo, homeGoals, awayGoals);
 
-    return { teamHome: teamHome, teamAway: teamAway, betInfo: betInfo, homeGoals: homeGoals, awayGoals: awayGoals, result: result };
+    return { 
+        teamHome: teamHome, 
+        teamAway: teamAway, 
+        betInfo: betInfo, 
+        homeGoals: homeGoals, 
+        awayGoals: awayGoals, 
+        result: result 
+    };
 }
 
 function parseBetSlip(text) {
@@ -453,6 +509,29 @@ function parseBetSlip(text) {
         if (leg) legs.push(leg);
     });
     return legs;
+}
+
+function describeMarket(betInfo) {
+    switch (betInfo.market) {
+        case '1x2':
+            return 'FT 1X2 - ' + 
+                (betInfo.selection === 'home' ? 'Home' :
+                 betInfo.selection === 'away' ? 'Away' :
+                 betInfo.selection === 'draw' ? 'Draw' : 'unknown');
+        case 'ou':
+            return 'Over/Under ' + (betInfo.selection === 'over' ? 'Over ' : 'Under ') + 
+                (betInfo.line !== null ? formatNumber(betInfo.line) : '');
+        case 'handicap':
+            return 'Handicap ' + (betInfo.selection === 'home' ? 'Home ' : 'Away ') + 
+                (betInfo.handicap !== null ? (betInfo.handicap > 0 ? '+' : '') + formatNumber(betInfo.handicap) : '');
+        case 'btts':
+            return 'BTTS - ' + 
+                (betInfo.selection === 'both' ? 'Both' :
+                 betInfo.selection === 'neither' ? 'Neither' :
+                 betInfo.selection === 'one' ? 'One' : 'unknown');
+        default:
+            return betInfo.description || 'Unknown market';
+    }
 }
 
 // ============================================================
@@ -480,36 +559,31 @@ function calcPayout(stake, odds, status) {
     let winLose = 0, totalKemenangan = 0, explanationText = "";
 
     if (status === 'won') {
-        // Deteksi format odds: American (>= 100 atau <= -100) atau Decimal
         let isAmerican = Math.abs(odds) >= 100;
         
         if (isAmerican) {
             if (odds > 0) {
-                // Positive American odds
                 winLose = stake * (odds / 100);
-                explanationText += "Odds " + (odds > 0 ? '+' : '') + formatNumber(odds) + " terdeteksi sebagai American (positif).\n";
-                explanationText += "Rumus: Keuntungan = Stake x (Odds / 100)\n";
-                explanationText += formatNumber(stake) + " x (" + formatNumber(odds) + " / 100) = " + formatNumber(winLose);
+                explanationText += "Odds " + (odds > 0 ? '+' : '') + formatNumber(odds) + " (American positif)\n";
+                explanationText += "Rumus: Keuntungan = Stake x (Odds/100)\n";
+                explanationText += formatNumber(stake) + " x (" + formatNumber(odds) + "/100) = " + formatNumber(winLose);
             } else {
-                // Negative American odds
                 winLose = stake * (100 / Math.abs(odds));
-                explanationText += "Odds " + formatNumber(odds) + " terdeteksi sebagai American (negatif).\n";
-                explanationText += "Rumus: Keuntungan = Stake x (100 / |Odds|)\n";
-                explanationText += formatNumber(stake) + " x (100 / " + formatNumber(Math.abs(odds)) + ") = " + formatNumber(winLose);
+                explanationText += "Odds " + formatNumber(odds) + " (American negatif)\n";
+                explanationText += "Rumus: Keuntungan = Stake x (100/|Odds|)\n";
+                explanationText += formatNumber(stake) + " x (100/" + formatNumber(Math.abs(odds)) + ") = " + formatNumber(winLose);
             }
             totalKemenangan = stake + winLose;
-            explanationText += "\nTotal Kemenangan = Stake + Keuntungan = " + formatNumber(stake) + " + " + formatNumber(winLose) + " = " + formatNumber(totalKemenangan);
+            explanationText += "\nTotal = Stake + Keuntungan = " + formatNumber(stake) + " + " + formatNumber(winLose) + " = " + formatNumber(totalKemenangan);
         } else {
-            // Decimal odds
             winLose = stake * (odds - 1);
             totalKemenangan = stake * odds;
-            explanationText += "Odds " + formatNumber(odds) + " terdeteksi sebagai Decimal.\n";
-            explanationText += "Rumus: Total Kemenangan = Stake x Odds\n";
+            explanationText += "Odds " + formatNumber(odds) + " (Decimal)\n";
+            explanationText += "Rumus: Total = Stake x Odds\n";
             explanationText += formatNumber(stake) + " x " + formatNumber(odds) + " = " + formatNumber(totalKemenangan) + "\n";
-            explanationText += "Keuntungan = Total Kemenangan - Stake = " + formatNumber(totalKemenangan) + " - " + formatNumber(stake) + " = " + formatNumber(winLose);
+            explanationText += "Keuntungan = Total - Stake = " + formatNumber(totalKemenangan) + " - " + formatNumber(stake) + " = " + formatNumber(winLose);
         }
     } else {
-        // Lose
         winLose = -stake;
         totalKemenangan = 0;
         explanationText += "Taruhan KALAH, seluruh Stake hilang.\n";
@@ -538,15 +612,11 @@ function hitungBetting(event) {
         alert("Odds harus diisi dengan angka dan tidak boleh 0.");
         return;
     }
-    if (odds > 0 && odds < 100 && odds <= 1) {
-        alert("Odds decimal harus lebih besar dari 1 (contoh: 1.85). Jika ini odds American, gunakan nilai >= 100 atau <= -100.");
-        return;
-    }
 
     let status = "lose";
     let explanationText = "";
 
-    // Coba parsing sebagai slip multi-leg (parlay)
+    // Parse slip taruhan
     let legs = parseBetSlip(details);
 
     if (legs.length > 0) {
@@ -557,40 +627,61 @@ function hitungBetting(event) {
             : "Terdeteksi " + legs.length + " leg pertandingan (parlay/mix parlay):\n\n";
 
         legs.forEach(function(l, i) {
+            let betDesc = describeMarket(l.betInfo);
             explanationText += (isSingle ? "" : (i + 1) + ". ") + l.teamHome + " vs " + l.teamAway + "\n";
+            explanationText += "   Pasaran   : " + betDesc + " @" + formatNumber(l.betInfo.odds) + "\n";
             explanationText += "   Skor FT   : " + l.homeGoals + " - " + l.awayGoals + "\n";
-            explanationText += "   Hasil     : " + (l.result === 'win' ? 'MENANG' : l.result === 'lose' ? 'KALAH' : l.result === 'push' ? 'PUSH' : 'TIDAK DIKENALI') + "\n\n";
+            
+            let resultText = l.result === 'win' ? '✅ MENANG' : 
+                            l.result === 'lose' ? '❌ KALAH' : 
+                            l.result === 'push' ? '⚪ PUSH (Seri)' : '⚠️ TIDAK DIKENALI';
+            explanationText += "   Hasil     : " + resultText + "\n\n";
         });
 
         let anyLose = legs.some(function(l) { return l.result === 'lose'; });
+        let anyPush = legs.some(function(l) { return l.result === 'push'; });
         let anyUnknown = legs.some(function(l) { return l.result === 'unknown'; });
 
-        if (anyUnknown) {
-            explanationText += "PERHATIAN: ada pasaran yang belum dikenali sistem. Mohon verifikasi manual.\n\n";
-        }
-
-        status = (anyLose || anyUnknown) ? "lose" : "won";
-
+        // Hitung odds gabungan untuk parlay
         let computedCombinedOdds = legs.reduce(function(acc, l) {
-            return l.result === 'push' ? acc : acc * l.betInfo.odds;
+            // Push tidak mempengaruhi odds (dianggap 1.0)
+            if (l.result === 'push') return acc;
+            return acc * l.betInfo.odds;
         }, 1);
 
         if (isSingle) {
-            explanationText += "Karena ini taruhan SINGLE, status mengikuti hasil pertandingan.\n";
+            // Single: status langsung dari hasil leg
+            status = (anyLose || anyUnknown) ? 'lose' : 'won';
+            
+            explanationText += "Single: status mengikuti hasil pertandingan.\n";
             explanationText += "Odds dari parsing: " + formatNumber(computedCombinedOdds) + "\n";
             explanationText += "Odds dari form: " + formatNumber(odds) + "\n";
             if (Math.abs(computedCombinedOdds - odds) > 0.01) {
-                explanationText += "Catatan: selisih odds, cek ulang input.\n";
+                explanationText += "⚠️ Catatan: ada selisih odds, cek ulang input.\n";
             }
-            explanationText += "\nStatus: " + (status === 'won' ? 'MENANG' : 'KALAH') + "\n\n";
+            explanationText += "\nStatus: " + (status === 'won' ? '✅ MENANG' : '❌ KALAH') + "\n\n";
         } else {
-            explanationText += "Parlay: SEMUA leg harus MENANG agar taruhan menang.\n";
+            // Parlay: semua leg harus menang (push dianggap netral)
+            // Jika ada unknown, dianggap lose untuk keamanan
+            let hasLose = legs.some(function(l) { return l.result === 'lose'; });
+            let hasUnknown = legs.some(function(l) { return l.result === 'unknown'; });
+            
+            // Push diabaikan, selama tidak ada lose atau unknown
+            status = (hasLose || hasUnknown) ? 'lose' : 'won';
+            
+            explanationText += "Parlay: SEMUA leg harus MENANG (push diabaikan).\n";
             explanationText += "Odds gabungan (cross-check): " + formatNumber(computedCombinedOdds) + "\n";
             explanationText += "Odds dari form: " + formatNumber(odds) + "\n";
             if (Math.abs(computedCombinedOdds - odds) > 0.01) {
-                explanationText += "Catatan: selisih odds, cek ulang input.\n";
+                explanationText += "⚠️ Catatan: ada selisih odds, cek ulang input.\n";
             }
-            explanationText += "\nStatus keseluruhan: " + (status === 'won' ? 'MENANG' : 'KALAH') + "\n\n";
+            if (anyPush) {
+                explanationText += "ℹ️ Ada leg PUSH (seri) - oddsnya tidak mempengaruhi perhitungan.\n";
+            }
+            if (anyUnknown) {
+                explanationText += "⚠️ Ada leg dengan pasaran yang tidak dikenali - status dianggap KALAH.\n";
+            }
+            explanationText += "\nStatus keseluruhan: " + (status === 'won' ? '✅ MENANG' : '❌ KALAH') + "\n\n";
         }
 
     } else {
