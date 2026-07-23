@@ -473,6 +473,53 @@ function asianHandicapFactor(line, teamGoals, oppGoals) {
     return evalHalf(line);
 }
 
+// Sama seperti asianHandicapFactor, tapi juga mengembalikan uraian
+// langkah-demi-langkah dalam Bahasa Indonesia untuk ditampilkan di
+// kotak Penjelasan (tanpa perlu API AI eksternal).
+function asianHandicapReasoning(line, teamGoals, oppGoals, teamLabel, oppLabel) {
+    function evalHalf(l) {
+        let diff = (teamGoals - oppGoals) + l;
+        let hasil = diff > 0 ? 'MENANG' : (diff === 0 ? 'PUSH' : 'KALAH');
+        let tanda = l >= 0 ? '+' : '';
+        return {
+            factor: diff > 0 ? 1 : (diff === 0 ? 0 : -1),
+            text: "   Skor (" + teamLabel + " " + teamGoals + " - " + oppGoals + " " + oppLabel + ") " + tanda + formatNumber(l) +
+                  " = margin " + formatNumber(diff) + " -> " + hasil
+        };
+    }
+    let quarterUnits = Math.round(line * 4);
+    let isQuarterLine = quarterUnits % 2 !== 0;
+    let lines = [];
+    let factor;
+    if (isQuarterLine) {
+        let lower = (quarterUnits - 1) / 4;
+        let upper = (quarterUnits + 1) / 4;
+        let a = evalHalf(lower), b = evalHalf(upper);
+        factor = (a.factor + b.factor) / 2;
+        lines.push("Handicap " + formatNumber(line) + " adalah garis QUARTER, dipecah jadi 2 sub-taruhan setengah stake:");
+        lines.push("  Sub 1 - Handicap " + (lower >= 0 ? '+' : '') + formatNumber(lower) + ":");
+        lines.push(a.text);
+        lines.push("  Sub 2 - Handicap " + (upper >= 0 ? '+' : '') + formatNumber(upper) + ":");
+        lines.push(b.text);
+        lines.push("Rata-rata kedua sub -> factor " + formatNumber(factor) + " (" + statusLabelForFactorText(factor) + ")");
+    } else {
+        let a = evalHalf(line);
+        factor = a.factor;
+        lines.push("Handicap " + (line >= 0 ? '+' : '') + formatNumber(line) + " adalah garis penuh/setengah, dihitung langsung:");
+        lines.push(a.text);
+        lines.push("-> factor " + formatNumber(factor) + " (" + statusLabelForFactorText(factor) + ")");
+    }
+    return { factor: factor, reasoning: lines.join("\n") };
+}
+
+function statusLabelForFactorText(factor) {
+    if (factor === 1) return 'MENANG PENUH';
+    if (factor === 0.5) return 'MENANG SETENGAH';
+    if (factor === 0) return 'PUSH';
+    if (factor === -0.5) return 'KALAH SETENGAH';
+    return 'KALAH PENUH';
+}
+
 function factorToResult(factor) {
     if (factor === 1) return 'win';
     if (factor === 0.5) return 'half-win';
@@ -484,34 +531,36 @@ function factorToResult(factor) {
 function determineLegResult(betInfo, homeGoals, awayGoals) {
     let market = betInfo.market, selection = betInfo.selection, line = betInfo.line;
     if (market === 'handicap') {
-        if (!betInfo.side || line === null || isNaN(line)) return { result: 'unknown', factor: null };
+        if (!betInfo.side || line === null || isNaN(line)) return { result: 'unknown', factor: null, reasoning: null };
         let teamGoals = betInfo.side === 'home' ? homeGoals : awayGoals;
         let oppGoals = betInfo.side === 'home' ? awayGoals : homeGoals;
-        let factor = asianHandicapFactor(line, teamGoals, oppGoals);
-        return { result: factorToResult(factor), factor: factor };
+        let teamLabel = betInfo.side === 'home' ? betInfo.teamHome : betInfo.teamAway;
+        let oppLabel = betInfo.side === 'home' ? betInfo.teamAway : betInfo.teamHome;
+        let r = asianHandicapReasoning(line, teamGoals, oppGoals, teamLabel, oppLabel);
+        return { result: factorToResult(r.factor), factor: r.factor, reasoning: r.reasoning };
     }
     if (market === '1x2') {
-        if (selection === 'home') return { result: homeGoals > awayGoals ? 'win' : 'lose', factor: homeGoals > awayGoals ? 1 : -1 };
-        if (selection === 'away') return { result: awayGoals > homeGoals ? 'win' : 'lose', factor: awayGoals > homeGoals ? 1 : -1 };
-        if (selection === 'draw') return { result: homeGoals === awayGoals ? 'win' : 'lose', factor: homeGoals === awayGoals ? 1 : -1 };
+        if (selection === 'home') return { result: homeGoals > awayGoals ? 'win' : 'lose', factor: homeGoals > awayGoals ? 1 : -1, reasoning: "Pilihan Home Menang. Skor akhir " + homeGoals + " - " + awayGoals + " -> " + (homeGoals > awayGoals ? "Home benar menang." : "Home tidak menang.") };
+        if (selection === 'away') return { result: awayGoals > homeGoals ? 'win' : 'lose', factor: awayGoals > homeGoals ? 1 : -1, reasoning: "Pilihan Away Menang. Skor akhir " + homeGoals + " - " + awayGoals + " -> " + (awayGoals > homeGoals ? "Away benar menang." : "Away tidak menang.") };
+        if (selection === 'draw') return { result: homeGoals === awayGoals ? 'win' : 'lose', factor: homeGoals === awayGoals ? 1 : -1, reasoning: "Pilihan Seri (Draw). Skor akhir " + homeGoals + " - " + awayGoals + " -> " + (homeGoals === awayGoals ? "Benar seri." : "Tidak seri.") };
     }
     if (market === 'ou') {
         let total = homeGoals + awayGoals;
         if (selection === 'over') {
             let f = total > line ? 1 : (total === line ? 0 : -1);
-            return { result: factorToResult(f), factor: f };
+            return { result: factorToResult(f), factor: f, reasoning: "Total gol " + total + " dibanding garis Over " + formatNumber(line) + " -> " + (f === 1 ? "MENANG (total lebih besar)" : f === 0 ? "PUSH (total sama persis)" : "KALAH (total lebih kecil/sama)") };
         }
         if (selection === 'under') {
             let f = total < line ? 1 : (total === line ? 0 : -1);
-            return { result: factorToResult(f), factor: f };
+            return { result: factorToResult(f), factor: f, reasoning: "Total gol " + total + " dibanding garis Under " + formatNumber(line) + " -> " + (f === 1 ? "MENANG (total lebih kecil)" : f === 0 ? "PUSH (total sama persis)" : "KALAH (total lebih besar/sama)") };
         }
     }
     if (market === 'btts') {
-        if (selection === 'both') { let f = (homeGoals > 0 && awayGoals > 0) ? 1 : -1; return { result: factorToResult(f), factor: f }; }
-        if (selection === 'neither') { let f = (homeGoals === 0 && awayGoals === 0) ? 1 : -1; return { result: factorToResult(f), factor: f }; }
-        if (selection === 'one') { let f = ((homeGoals > 0) !== (awayGoals > 0)) ? 1 : -1; return { result: factorToResult(f), factor: f }; }
+        if (selection === 'both') { let f = (homeGoals > 0 && awayGoals > 0) ? 1 : -1; return { result: factorToResult(f), factor: f, reasoning: "Both Teams To Score - Ya. Skor " + homeGoals + "-" + awayGoals + " -> " + (f === 1 ? "kedua tim mencetak gol, MENANG." : "tidak keduanya mencetak gol, KALAH.") }; }
+        if (selection === 'neither') { let f = (homeGoals === 0 && awayGoals === 0) ? 1 : -1; return { result: factorToResult(f), factor: f, reasoning: "Both Teams To Score - Tidak. Skor " + homeGoals + "-" + awayGoals + " -> " + (f === 1 ? "tidak ada tim mencetak gol, MENANG." : "ada tim yang mencetak gol, KALAH.") }; }
+        if (selection === 'one') { let f = ((homeGoals > 0) !== (awayGoals > 0)) ? 1 : -1; return { result: factorToResult(f), factor: f, reasoning: "Both Teams To Score - Hanya Satu. Skor " + homeGoals + "-" + awayGoals + " -> " + (f === 1 ? "hanya satu tim mencetak gol, MENANG." : "KALAH.") }; }
     }
-    return { result: 'unknown', factor: null };
+    return { result: 'unknown', factor: null, reasoning: null };
 }
 
 function describeMarket(betInfo) {
@@ -567,7 +616,7 @@ function parseLeg(block) {
 
     let resultInfo = determineLegResult(betInfo, homeGoals, awayGoals);
 
-    return { teamHome: teamHome, teamAway: teamAway, betInfo: betInfo, homeGoals: homeGoals, awayGoals: awayGoals, result: resultInfo.result, factor: resultInfo.factor };
+    return { teamHome: teamHome, teamAway: teamAway, betInfo: betInfo, homeGoals: homeGoals, awayGoals: awayGoals, result: resultInfo.result, factor: resultInfo.factor, reasoning: resultInfo.reasoning };
 }
 
 function parseBetSlip(text) {
@@ -717,7 +766,11 @@ function hitungBetting(event) {
             explanationText += (isSingle ? "" : (i + 1) + ". ") + l.teamHome + " vs " + l.teamAway + "\n";
             explanationText += "   Pasaran   : " + describeMarket(l.betInfo) + " @" + formatNumber(l.betInfo.odds) + "\n";
             explanationText += "   Skor FT   : " + l.homeGoals + " - " + l.awayGoals + "\n";
-            explanationText += "   Hasil     : " + statusLabel(l.factor === undefined ? null : l.factor) + "\n\n";
+            explanationText += "   Hasil     : " + statusLabel(l.factor === undefined ? null : l.factor) + "\n";
+            if (l.reasoning) {
+                explanationText += "   Alasan    :\n" + l.reasoning.split("\n").map(function(s) { return "   " + s; }).join("\n") + "\n";
+            }
+            explanationText += "\n";
         });
 
         let anyUnknown = legs.some(function(l) { return l.result === 'unknown'; });
