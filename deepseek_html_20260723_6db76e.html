@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Kalkulator Betting Otomatis - Pro</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-deep: #0a0d1a;
+  --bg-mid: #12162a;
+  --surface: #161b31;
+  --surface-alt: #1c2138;
+  --border: rgba(255,255,255,0.08);
+  --border-soft: rgba(255,255,255,0.05);
+  --text-primary: #f5f3f8;
+  --text-muted: #9297b3;
+  --rose: #f3a6cf;
+  --lime: #dbf500;
+  --lime-dim: rgba(219,245,0,0.15);
+  --violet: #a78bfa;
+  --violet-dim: rgba(167,139,250,0.15);
+  --win: #3ce6a0;
+  --lose: #fb7189;
+  --shadow: 0 20px 60px rgba(0,0,0,0.45);
+  --gold-light: #f6e7a8;
+  --gold: #d9b45a;
+  --gold-deep: #a7782c;
+  --gold-dim: rgba(217,180,90,0.15);
+  --gold-gradient: linear-gradient(120deg, var(--gold-light) 0%, var(--gold) 45%, var(--gold-deep) 100%);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: radial-gradient(1200px 600px at 15% -10%, #1b1440 0%, transparent 60%),
+              radial-gradient(1000px 500px at 110% 10%, #101c3a 0%, transparent 55%),
+              linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 100%);
+  background-attachment: fixed;
+  margin: 0;
+  padding: 40px 20px;
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-mid) 100%);
+  padding: 36px 40px 44px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--gold-gradient);
+  box-shadow: 0 0 14px rgba(217,180,90,0.5);
+}
+
+.container > * { position: relative; z-index: 1; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  background: rgba(217,180,90,0.08);
+  border: 1px solid rgba(217,180,90,0.35);
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 18px;
+}
+.eyebrow::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+}
+
+h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 2.4vw, 30px);
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  position: relative;
+  padding-bottom: 20px;
+  margin: 0 0 28px;
+  letter-spacing: -0.01em;
+  filter: drop-shadow(0 0 18px rgba(217,180,90,0.18));
+}
+h2::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 100%; height: 8px;
+  background:
+    linear-gradient(90deg, transparent 0%, var(--gold) 100%) bottom / 100% 1px no-repeat,
+    radial-gradient(circle at 0 0, var(--gold-light) 0 3px, transparent 4px) left bottom no-repeat;
+  opacity: 0.9;
+}
+
+h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+h3::before {
+  content: "";
+  width: 4px; height: 18px;
+  border-radius: 2px;
+  background: var(--gold-gradient);
+  box-shadow: 0 0 10px rgba(217,180,90,0.5);
+  display: inline-block;
+}
+
+h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--gold-light);
+  margin: 16px 0 8px;
+}
+
+.form-group { margin-bottom: 20px; }
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--gold-light);
+}
+
+input[type="number"], 
+input[type="text"],
+textarea,
+select {
+  width: 100%;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+select {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d9b45a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+input[type="number"]::placeholder, 
+textarea::placeholder,
+select::placeholder { color: var(--text-muted); }
+
+input[type="number"]:focus, 
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: rgba(217,180,90,0.06);
+  box-shadow: 0 0 0 3px var(--gold-dim);
+}
+
+textarea { height: 120px; resize: vertical; }
+
+button {
+  background: var(--gold-gradient);
+  color: #1c1608;
+  border: none;
+  padding: 13px 26px;
+  cursor: pointer;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 24px rgba(217,180,90,0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+button:hover { filter: brightness(1.08); box-shadow: 0 10px 30px rgba(217,180,90,0.35); transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 20px;
+  overflow-x: auto;
+  display: block;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+th, td {
+  border-bottom: 1px solid var(--border-soft);
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 13px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+th {
+  background: var(--surface-alt);
+  color: var(--gold-light);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(217,180,90,0.25);
+}
+
+td { background: rgba(255,255,255,0.015); color: var(--text-primary); }
+tbody tr:last-child td { border-bottom: none; }
+
+.win { color: var(--win); font-weight: 700; text-shadow: 0 0 12px rgba(60,230,160,0.25); }
+.lose { color: var(--lose); font-weight: 700; text-shadow: 0 0 12px rgba(251,113,137,0.2); }
+.push { color: var(--gold-light); font-weight: 700; }
+
+#result-section { display: none; margin-top: 34px; }
+
+.explanation-box { margin-top: 20px; }
+.explanation-box textarea {
+  background: #0d1022;
+  color: #c9cee8;
+  height: 300px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.8;
+  border-color: rgba(217,180,90,0.2);
+}
+
+.odds-type-selector {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.odds-type-selector select {
+  flex: 1;
+  min-width: 150px;
+}
+
+.result-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+}
+
+.result-item {
+  text-align: center;
+}
+.result-item .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.result-item .value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  margin-top: 4px;
+}
+.result-item .value.win { color: var(--win); }
+.result-item .value.lose { color: var(--lose); }
+
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .container { padding: 20px; }
+  .grid-2col { grid-template-columns: 1fr; }
+  th, td { padding: 10px 12px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<span class="eyebrow">SMB Group · Betting Engine Pro</span>
+<h2>Dashboard Kalkulator Betting Akurat</h2>
+
+<form id="betForm" onsubmit="hitungBetting(event)">
+<div class="grid-2col">
+  <div class="form-group">
+    <label>📝 Details Pertandingan:</label>
+    <textarea id="details" required placeholder="Masukkan detail taruhan di sini..."></textarea>
+  </div>
+  
+  <div class="form-group">
+    <label>🎯 Jenis Odds:</label>
+    <select id="oddsType">
+      <option value="decimal">Decimal (1.85)</option>
+      <option value="american">American (+185 / -200)</option>
+      <option value="hongkong">Hong Kong (0.85)</option>
+      <option value="indonesian">Indonesian (-1.18 / 1.18)</option>
+      <option value="malay">Malay (-0.85 / 0.85)</option>
+    </select>
+  </div>
+</div>
+
+<div class="grid-2col">
+  <div class="form-group">
+    <label>💰 Stake:</label>
+    <input type="number" step="0.01" id="stake" required placeholder="Contoh: 100" min="0.01">
+  </div>
+  
+  <div class="form-group">
+    <label>📊 Odds Value:</label>
+    <input type="number" step="any" id="odds" required placeholder="Contoh: 1.85" 
+           onchange="detectOddsType(this.value)">
+  </div>
+</div>
+
+<button type="submit">🚀 Proses & Hitung Akurat</button>
+</form>
+
+<!-- Hasil -->
+<div id="result-section">
+<h3>📈 Hasil Kalkulasi Detail</h3>
+
+<div class="result-summary" id="resultSummary">
+  <div class="result-item">
+    <div class="label">Status</div>
+    <div class="value" id="res-status-display">-</div>
+  </div>
+  <div class="result-item">
+    <div class="label">Total Kemenangan</div>
+    <div class="value" id="res-total-display">-</div>
+  </div>
+  <div class="result-item">
+    <div class="label">Keuntungan / Kerugian</div>
+    <div class="value" id="res-profit-display">-</div>
+  </div>
+  <div class="result-item">
+    <div class="label">ROI</div>
+    <div class="value" id="res-roi-display">-</div>
+  </div>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Details</th>
+<th>Stake</th>
+<th>Odds</th>
+<th>Win/Lose</th>
+<th>Total</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><pre id="res-details" style="margin:0; font-family:inherit; white-space: pre-wrap; max-width:250px;"></pre></td>
+<td id="res-stake"></td>
+<td id="res-odds"></td>
+<td id="res-win-lose"></td>
+<td id="res-total-kemenangan"></td>
+<td id="res-status"></td>
+</tr>
+</tbody>
+</table>
+
+<!-- Penjelasan Detail -->
+<div class="form-group explanation-box">
+  <label for="res-explanation">📖 Penjelasan Kalkulasi Lengkap:</label>
+  <textarea id="res-explanation" placeholder="Penjelasan kalkulasi akan muncul otomatis di sini..."></textarea>
+</div>
+</div>
+
+</div>
+
+<script>
+function formatNumber(num) {
+    if (num === undefined || num === null || isNaN(num)) return '0.00';
+    return Number(num).toFixed(2);
+}
+
+function formatNumberFull(num) {
+    if (num === undefined || num === null || isNaN(num)) return '0.0000';
+    return Number(num).toFixed(4);
+}
+
+// ============================================================
+// DETEKSI JENIS ODDS OTOMATIS
+// ============================================================
+function detectOddsType(val) {
+    val = parseFloat(val);
+    if (isNaN(val) || val === 0) return;
+    
+    let select = document.getElementById('oddsType');
+    let currentVal = select.value;
+    
+    // Jika odds >= 100 atau <= -100 -> American
+    if (val >= 100 || val <= -100) {
+        if (currentVal !== 'american') select.value = 'american';
+        return;
+    }
+    
+    // Jika odds > 1 -> Decimal atau Hong Kong
+    if (val > 1) {
+        if (currentVal !== 'decimal' && currentVal !== 'hongkong') {
+            // Default ke decimal
+            select.value = 'decimal';
+        }
+        return;
+    }
+    
+    // Jika odds antara -1 dan 1 (tidak termasuk 0)
+    if (val > -1 && val < 1 && val !== 0) {
+        if (currentVal !== 'malay' && currentVal !== 'indonesian') {
+            select.value = 'malay';
+        }
+    }
+}
+
+// ============================================================
+// KONVERSI ODDS KE DECIMAL
+// ============================================================
+function oddsToDecimal(odds, type) {
+    odds = parseFloat(odds);
+    if (isNaN(odds) || odds === 0) return NaN;
+    
+    switch(type) {
+        case 'decimal':
+            return odds;
+        case 'american':
+            if (odds > 0) return 1 + (odds / 100);
+            else return 1 + (100 / Math.abs(odds));
+        case 'hongkong':
+            return 1 + odds;
+        case 'indonesian':
+            if (odds > 0) return 1 + odds;
+            else return 1 + (1 / Math.abs(odds));
+        case 'malay':
+            if (odds > 0) return 1 + odds;
+            else return 1 + (1 / Math.abs(odds));
+        default:
+            return odds;
+    }
+}
+
+// ============================================================
+// KONVERSI ODDS KE AMERICAN (untuk display)
+// ============================================================
+function oddsToAmerican(decimalOdds) {
+    if (decimalOdds < 1) return null;
+    if (decimalOdds === 1) return 0;
+    if (decimalOdds >= 2) {
+        return '+' + Math.round((decimalOdds - 1) * 100);
+    } else {
+        return '-' + Math.round(100 / (decimalOdds - 1));
+    }
+}
+
+// ============================================================
+// PARSER SLIP TARUHAN
+// ============================================================
+function parseBetDescription(desc) {
+    desc = desc.toLowerCase();
+    if (desc.includes('1x2') || desc.includes('ft 1x2')) {
+        let selection = null;
+        if (/\bhome\b/.test(desc) || /\b1\b/.test(desc) && !/\b1x2\b/.test(desc)) selection = 'home';
+        else if (/\baway\b/.test(desc) || /\b2\b/.test(desc) && !/\b1x2\b/.test(desc)) selection = 'away';
+        else if (/\bdraw\b/.test(desc) || /\bx\b/.test(desc) && !/\b1x2\b/.test(desc)) selection = 'draw';
+        return { market: '1x2', selection: selection };
+    }
+    if (desc.includes('over') || desc.includes('under')) {
+        let selection = desc.includes('over') ? 'over' : 'under';
+        return { market: 'ou', selection: selection };
+    }
+    if (desc.includes('both teams to score') || desc.includes('btts')) {
+        return { market: 'btts', selection: 'both' };
+    }
+    if (desc.includes('neither')) {
+        return { market: 'btts', selection: 'neither' };
+    }
+    if (/\bone team\b/.test(desc)) {
+        return { market: 'btts', selection: 'one' };
+    }
+    return { market: 'unknown', selection: null };
+}
+
+function parseBetLine(betLineRaw) {
+    let oddsMatch = betLineRaw.match(/@\s*([\d.]+)\s*$/);
+    let odds = oddsMatch ? parseFloat(oddsMatch[1]) : NaN;
+    let withoutOdds = betLineRaw.replace(/@\s*[\d.]+\s*$/, '').trim();
+    let lineMatch = withoutOdds.match(/([\d.]+)\s*$/);
+    let line = lineMatch ? parseFloat(lineMatch[1]) : null;
+    let withoutLine = lineMatch ? withoutOdds.slice(0, lineMatch.index).trim() : withoutOdds;
+    let parsed = parseBetDescription(withoutLine);
+    return {
+        odds: odds,
+        line: line,
+        market: parsed.market,
+        selection: parsed.selection,
+        description: withoutLine
+    };
+}
+
+function determineLegResult(betInfo, homeGoals, awayGoals) {
+    let market = betInfo.market, selection = betInfo.selection, line = betInfo.line;
+    if (market === '1x2') {
+        if (selection === 'home') return homeGoals > awayGoals ? 'win' : 'lose';
+        if (selection === 'away') return awayGoals > homeGoals ? 'win' : 'lose';
+        if (selection === 'draw') return homeGoals === awayGoals ? 'win' : 'lose';
+    }
+    if (market === 'ou') {
+        let total = homeGoals + awayGoals;
+        if (selection === 'over') return total > line ? 'win' : (total === line ? 'push' : 'lose');
+        if (selection === 'under') return total < line ? 'win' : (total === line ? 'push' : 'lose');
+    }
+    if (market === 'btts') {
+        if (selection === 'both') return (homeGoals > 0 && awayGoals > 0) ? 'win' : 'lose';
+        if (selection === 'neither') return (homeGoals === 0 && awayGoals === 0) ? 'win' : 'lose';
+        if (selection === 'one') return ((homeGoals > 0) !== (awayGoals > 0)) ? 'win' : 'lose';
+    }
+    return 'unknown';
+}
+
+function describeMarket(betInfo) {
+    switch (betInfo.market) {
+        case '1x2':
+            return 'FT 1X2 - ' +
+                (betInfo.selection === 'home' ? 'Home' :
+                 betInfo.selection === 'away' ? 'Away' :
+                 betInfo.selection === 'draw' ? 'Draw' : 'unknown');
+        case 'ou':
+            return 'Over/Under ' + (betInfo.selection === 'over' ? 'Over' : 'Under') + ' ' + formatNumber(betInfo.line);
+        case 'btts':
+            return 'BTTS - ' +
+                (betInfo.selection === 'both' ? 'Both' :
+                 betInfo.selection === 'neither' ? 'Neither' :
+                 betInfo.selection === 'one' ? 'One' : 'unknown');
+        default:
+            return 'Unknown market';
+    }
+}
+
+function parseLeg(block) {
+    let teamMatch = block.match(/^(.+?)\s+vs\.?\s+(.+)$/im);
+    let betMatch = block.match(/bet:\s*(.+)/i);
+    let ftMatch = block.match(/full\s*time\s*result:\s*(\d+)\s*:\s*(\d+)/i);
+    if (!betMatch || !ftMatch) return null;
+
+    let betInfo = parseBetLine(betMatch[1].trim());
+    let homeGoals = parseInt(ftMatch[1], 10);
+    let awayGoals = parseInt(ftMatch[2], 10);
+    let teamHome = teamMatch ? teamMatch[1].trim() : '(home)';
+    let teamAway = teamMatch ? teamMatch[2].trim() : '(away)';
+    let result = determineLegResult(betInfo, homeGoals, awayGoals);
+
+    return { teamHome: teamHome, teamAway: teamAway, betInfo: betInfo, homeGoals: homeGoals, awayGoals: awayGoals, result: result };
+}
+
+function parseBetSlip(text) {
+    let blocks = text.split(/\n\s*\n+/).map(function(b) { return b.trim(); }).filter(Boolean);
+    let legs = [];
+    blocks.forEach(function(b) {
+        let leg = parseLeg(b);
+        if (leg) legs.push(leg);
+    });
+    return legs;
+}
+
+// ============================================================
+// FALLBACK: DETEKSI KATA KUNCI
+// ============================================================
+function containsWord(text, words) {
+    return words.some(function(w) {
+        let re = new RegExp('\\b' + w + '\\b', 'i');
+        return re.test(text);
+    });
+}
+
+function detectStatusFromKeywords(details) {
+    let winWords = ["won", "win", "menang", "unggul", "victory"];
+    let loseWords = ["lose", "lost", "kalah", "defeat"];
+    let pushWords = ["push", "seri", "draw", "tie"];
+    
+    let isWin = containsWord(details, winWords);
+    let isLose = containsWord(details, loseWords);
+    let isPush = containsWord(details, pushWords);
+    
+    if (isPush) {
+        return { status: "push", note: "Status PUSH/PUSH terdeteksi dari kata kunci pada Details." };
+    } else if (isWin && !isLose) {
+        return { status: "won", note: "Status MENANG terdeteksi dari kata kunci pada Details." };
+    } else if (isLose && !isWin) {
+        return { status: "lose", note: "Status KALAH terdeteksi dari kata kunci pada Details." };
+    } else {
+        return { status: "lose", note: "Status di-default-kan ke KALAH. Tidak terdeteksi kata kunci yang jelas." };
+    }
+}
+
+// ============================================================
+// PERHITUNGAN UTAMA - DETAIL & AKURAT
+// ============================================================
+function calculatePayout(stake, odds, oddsType, status, detailText) {
+    let decimalOdds = oddsToDecimal(odds, oddsType);
+    let result = {
+        stake: stake,
+        odds: odds,
+        oddsType: oddsType,
+        decimalOdds: decimalOdds,
+        status: status,
+        winLose: 0,
+        totalKemenangan: 0,
+        profit: 0,
+        roi: 0,
+        explanation: [],
+        isPush: false
+    };
+    
+    // Jika odds tidak valid
+    if (isNaN(decimalOdds) || decimalOdds <= 0) {
+        result.explanation.push('⚠️ ERROR: Odds tidak valid!');
+        result.status = 'error';
+        return result;
+    }
+    
+    // Konversi ke American untuk display
+    let americanOdds = oddsToAmerican(decimalOdds);
+    
+    // Tambahkan info odds
+    result.explanation.push('📊 INFORMASI ODDS:');
+    result.explanation.push(`   • Odds input: ${formatNumber(odds)} (${oddsType})`);
+    result.explanation.push(`   • Decimal equivalent: ${formatNumber(decimalOdds)}`);
+    if (americanOdds) {
+        result.explanation.push(`   • American equivalent: ${americanOdds > 0 ? '+' : ''}${americanOdds}`);
+    }
+    result.explanation.push('');
+    
+    // Push (tie) - stake dikembalikan
+    if (status === 'push') {
+        result.winLose = 0;
+        result.totalKemenangan = stake;
+        result.profit = 0;
+        result.roi = 0;
+        result.isPush = true;
+        result.explanation.push('🔄 STATUS: PUSH (Seri/Tie)');
+        result.explanation.push(`   • Stake dikembalikan: ${formatNumber(stake)}`);
+        result.explanation.push(`   • Keuntungan: 0`);
+        result.explanation.push(`   • Total diterima: ${formatNumber(stake)}`);
+        return result;
+    }
+    
+    // Lose
+    if (status === 'lose') {
+        result.winLose = -stake;
+        result.totalKemenangan = 0;
+        result.profit = -stake;
+        result.roi = -100;
+        result.explanation.push('❌ STATUS: KALAH');
+        result.explanation.push(`   • Stake hilang: ${formatNumber(stake)}`);
+        result.explanation.push(`   • Kerugian: ${formatNumber(stake)}`);
+        return result;
+    }
+    
+    // WIN
+    if (status === 'won') {
+        let profit = 0;
+        let total = 0;
+        
+        // Kalkulasi berdasarkan jenis odds
+        switch(oddsType) {
+            case 'decimal':
+                total = stake * decimalOdds;
+                profit = total - stake;
+                result.explanation.push('📈 RUMUS DECIMAL:');
+                result.explanation.push(`   • Total = Stake × Odds`);
+                result.explanation.push(`   • Total = ${formatNumber(stake)} × ${formatNumber(decimalOdds)} = ${formatNumber(total)}`);
+                result.explanation.push(`   • Profit = Total - Stake = ${formatNumber(total)} - ${formatNumber(stake)} = ${formatNumber(profit)}`);
+                break;
+                
+            case 'american':
+                if (odds > 0) {
+                    profit = stake * (odds / 100);
+                    total = stake + profit;
+                    result.explanation.push('📈 RUMUS AMERICAN (POSITIF):');
+                    result.explanation.push(`   • Profit = Stake × (Odds / 100)`);
+                    result.explanation.push(`   • Profit = ${formatNumber(stake)} × (${formatNumber(odds)} / 100) = ${formatNumber(profit)}`);
+                    result.explanation.push(`   • Total = Stake + Profit = ${formatNumber(stake)} + ${formatNumber(profit)} = ${formatNumber(total)}`);
+                } else {
+                    let absOdds = Math.abs(odds);
+                    profit = stake * (100 / absOdds);
+                    total = stake + profit;
+                    result.explanation.push('📈 RUMUS AMERICAN (NEGATIF):');
+                    result.explanation.push(`   • Profit = Stake × (100 / |Odds|)`);
+                    result.explanation.push(`   • Profit = ${formatNumber(stake)} × (100 / ${formatNumber(absOdds)}) = ${formatNumber(profit)}`);
+                    result.explanation.push(`   • Total = Stake + Profit = ${formatNumber(stake)} + ${formatNumber(profit)} = ${formatNumber(total)}`);
+                }
+                break;
+                
+            case 'hongkong':
+                profit = stake * odds;
+                total = stake + profit;
+                result.explanation.push('📈 RUMUS HONG KONG:');
+                result.explanation.push(`   • Profit = Stake × Odds`);
+                result.explanation.push(`   • Profit = ${formatNumber(stake)} × ${formatNumber(odds)} = ${formatNumber(profit)}`);
+                result.explanation.push(`   • Total = Stake + Profit = ${formatNumber(stake)} + ${formatNumber(profit)} = ${formatNumber(total)}`);
+                break;
+                
+            case 'indonesian':
+                if (odds > 0) {
+                    profit = stake * odds;
+                    total = stake + profit;
+                    result.explanation.push('📈 RUMUS INDONESIAN (POSITIF):');
+                    result.explanation.push(`   • Profit = Stake × Odds = ${formatNumber(stake)} × ${formatNumber(odds)} = ${formatNumber(profit)}`);
+                    result.explanation.push(`   • Total = ${formatNumber(stake)} + ${formatNumber(profit)} = ${formatNumber(total)}`);
+                } else {
+                    let absOdds = Math.abs(odds);
+                    profit = stake / absOdds;
+                    total = stake + profit;
+                    result.explanation.push('📈 RUMUS INDONESIAN (NEGATIF):');
+                    result.explanation.push(`   • Profit = Stake / |Odds| = ${formatNumber(stake)} / ${formatNumber(absOdds)} = ${formatNumber(profit)}`);
+                    result.explanation.push(`   • Total = ${formatNumber(stake)} + ${formatNumber(profit)} = ${formatNumber(total)}`);
+                }
+                break;
+                
+            case 'malay':
+                if (odds > 0) {
+                    profit = stake * odds;
+                    total = stake + profit;
+                    result.explanation.push('📈 RUMUS MALAY (POSITIF):');
+                    result.explanation.push(`   • Profit = Stake × Odds = ${formatNumber(stake)} × ${formatNumber(odds)} = ${formatNumber(profit)}`);
+                    result.explanation.push(`   • Total = ${formatNumber(stake)} + ${formatNumber(profit)} = ${formatNumber(total)}`);
+                } else {
+                    let absOdds = Math.abs(odds);
+                    profit = stake / absOdds;
+                    total = stake + profit;
+                    result.explanation.push('📈 RUMUS MALAY (NEGATIF):');
+                    result.explanation.push(`   • Profit = Stake / |Odds| = ${formatNumber(stake)} / ${formatNumber(absOdds)} = ${formatNumber(profit)}`);
+                    result.explanation.push(`   • Total = ${formatNumber(stake)} + ${formatNumber(profit)} = ${formatNumber(total)}`);
+                }
+                break;
+                
+            default:
+                total = stake * decimalOdds;
+                profit = total - stake;
+        }
+        
+        result.winLose = profit;
+        result.totalKemenangan = total;
+        result.profit = profit;
+        result.roi = (profit / stake) * 100;
+        
+        result.explanation.push('');
+        result.explanation.push('✅ STATUS: MENANG');
+        result.explanation.push(`   • Profit: +${formatNumber(profit)}`);
+        result.explanation.push(`   • Total diterima: ${formatNumber(total)}`);
+        result.explanation.push(`   • ROI: ${formatNumber(result.roi)}%`);
+        
+        return result;
+    }
+    
+    result.explanation.push('⚠️ Status tidak dikenali');
+    return result;
+}
+
+// ============================================================
+// HANDLER UTAMA
+// ============================================================
+function hitungBetting(event) {
+    event.preventDefault();
+    
+    let details = document.getElementById('details').value;
+    let stake = parseFloat(document.getElementById('stake').value);
+    let odds = parseFloat(document.getElementById('odds').value);
+    let oddsType = document.getElementById('oddsType').value;
+    
+    // Validasi
+    if (isNaN(stake) || stake <= 0) {
+        alert("⚠️ Stake harus berupa angka positif!");
+        return;
+    }
+    if (isNaN(odds) || odds === 0) {
+        alert("⚠️ Odds harus diisi dengan angka dan tidak boleh 0!");
+        return;
+    }
+    
+    // Validasi odds berdasarkan jenis
+    if (oddsType === 'decimal' && odds <= 1) {
+        alert("⚠️ Untuk jenis Decimal, odds harus > 1.00");
+        return;
+    }
+    if (oddsType === 'hongkong' &&
